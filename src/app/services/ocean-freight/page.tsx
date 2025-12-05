@@ -1,0 +1,73 @@
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CheckCircle, ArrowLeft } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+
+export default function OceanFreightPage() {
+    return (
+        <div className="min-h-screen bg-gray-50">
+            <header className="bg-white shadow-sm">
+                <div className="container mx-auto px-4 md:px-6 py-4 flex justify-between items-center">
+                    <Link href="/" className="text-2xl font-bold text-primary">NEXT GLOBAL EXPRESS</Link>
+                    <Button asChild variant="outline">
+                        <Link href="/"><ArrowLeft className="mr-2 h-4 w-4"/>Back to Home</Link>
+                    </Button>
+                </div>
+            </header>
+            <main className="container mx-auto px-4 md:px-6 py-8 md:py-12">
+                <div className="grid md:grid-cols-2 gap-8 items-center">
+                    <div>
+                        <Image 
+                            src="https://images.unsplash.com/photo-1614163825553-d142d1743c3f?q=80&w=2070&auto=format&fit=crop"
+                            alt="Ocean Freight"
+                            width={600}
+                            height={400}
+                            className="rounded-lg shadow-lg"
+                            data-ai-hint="cargo ship"
+                        />
+                    </div>
+                    <div>
+                        <h1 className="text-4xl font-bold mb-4">Ocean Freight Services</h1>
+                        <p className="text-lg text-muted-foreground mb-6">
+                            For large, heavy, or non-urgent shipments, our ocean freight services offer a reliable and cost-effective solution. We handle your cargo with expertise, ensuring it crosses the seas safely.
+                        </p>
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Key Features</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="flex items-start gap-3">
+                                    <CheckCircle className="w-5 h-5 mt-1 text-primary" />
+                                    <div>
+                                        <p className="font-semibold">Cost-Effective</p>
+                                        <p className="text-sm text-muted-foreground">The most economical option for bulk shipments.</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-start gap-3">
+                                    <CheckCircle className="w-5 h-5 mt-1 text-primary" />
+                                    <div>
+                                        <p className="font-semibold">Full & Partial Containers</p>
+                                        <p className="text-sm text-muted-foreground">Options for Full Container Load (FCL) and Less-than-Container Load (LCL).</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-start gap-3">
+                                    <CheckCircle className="w-5 h-5 mt-1 text-primary" />
+                                    <div>
+                                        <p className="font-semibold">Global Port Coverage</p>
+                                        <p className="text-sm text-muted-foreground">We connect to a vast network of ports worldwide.</p>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </div>
+            </main>
+            <footer className="bg-gray-800 text-white py-8 mt-12">
+                <div className="container mx-auto px-4 text-center">
+                    <p>&copy; {new Date().getFullYear()} Next Global Express. All rights reserved.</p>
+                </div>
+            </footer>
+        </div>
+    );
+}
