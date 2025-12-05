@@ -6,27 +6,72 @@ import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from '@/com
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 
-const heroImages = [
-  {
-    id: 1,
-    title: "Global Reach, Personal Touch.",
-    image: "https://images.unsplash.com/photo-1607082349566-187342175e2f?w=1200&h=800&fit=crop",
-  },
-  {
-    id: 2,
-    title: "Fast. Reliable. Secure.",
-    image: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=1200&h=800&fit=crop",
-  },
-  {
-    id: 3,
-    title: "Worldwide Network.",
-    image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=1200&h=800&fit=crop",
+// Load hero images from localStorage or use default
+const getHeroImages = () => {
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem('heroImages');
+    if (saved) {
+      try {
+        const images = JSON.parse(saved);
+        if (Array.isArray(images) && images.length > 0) {
+          return images.map((img: any) => ({
+            id: img.id,
+            title: img.title || 'Hero Image',
+            image: img.path || img.url || '/hero-images/hero-1.jpg',
+          }));
+        }
+      } catch (e) {
+        console.error('Error parsing hero images from localStorage:', e);
+      }
+    }
   }
-];
+  // Default fallback images
+  return [
+    {
+      id: 1,
+      title: "Global Reach, Personal Touch.",
+      image: "/hero-images/hero-1.jpg",
+    },
+    {
+      id: 2,
+      title: "Fast. Reliable. Secure.",
+      image: "/hero-images/hero-2.jpg",
+    },
+    {
+      id: 3,
+      title: "Worldwide Network.",
+      image: "/hero-images/hero-3.jpg",
+    }
+  ];
+};
 
 export function HeroSlider() {
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
+  const [heroImages, setHeroImages] = useState(getHeroImages());
+
+  // Listen for changes to hero images in localStorage
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setHeroImages(getHeroImages());
+    };
+
+    // Listen for storage events (when localStorage changes in another tab)
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also check periodically for changes (for same-tab updates)
+    const interval = setInterval(() => {
+      const newImages = getHeroImages();
+      if (JSON.stringify(newImages) !== JSON.stringify(heroImages)) {
+        setHeroImages(newImages);
+      }
+    }, 1000);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, [heroImages]);
 
   useEffect(() => {
     if (!api) {

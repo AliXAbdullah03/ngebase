@@ -10,7 +10,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
-  Calculator, 
   PackagePlus, 
   HelpCircle, 
   Mail, 
@@ -35,26 +34,8 @@ export default function Home() {
         {/* Quick Actions Section */}
         <section className="py-16 bg-white border-b">
           <div className="container mx-auto px-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <Link href="#" className="group">
-                <Card className="h-full border-2 hover:border-primary/50 transition-all duration-300 hover:shadow-xl hover:-translate-y-2 bg-gradient-to-br from-gray-50 to-white">
-                  <CardContent className="p-6 text-center">
-                    <div className="flex justify-center mb-4">
-                      <div className="p-4 rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                        <Calculator className="w-8 h-8 text-primary group-hover:scale-110 transition-transform" />
-                      </div>
-                    </div>
-                    <h3 className="text-xl font-bold text-gray-800 group-hover:text-primary transition-colors mb-2">
-                      Rate Calculator
-                    </h3>
-                    <p className="text-gray-600 text-sm group-hover:text-gray-800 transition-colors">
-                      Calculate shipping costs instantly
-                    </p>
-                  </CardContent>
-                </Card>
-              </Link>
-
-              <Link href="#" className="group">
+            <div className="flex flex-wrap justify-center gap-6 max-w-4xl mx-auto">
+              <Link href="/business-shipment" className="group w-full max-w-sm">
                 <Card className="h-full border-2 hover:border-primary/50 transition-all duration-300 hover:shadow-xl hover:-translate-y-2 bg-gradient-to-br from-gray-50 to-white">
                   <CardContent className="p-6 text-center">
                     <div className="flex justify-center mb-4">
@@ -72,7 +53,7 @@ export default function Home() {
                 </Card>
               </Link>
 
-              <Link href="#" className="group">
+              <Link href="/faqs" className="group w-full max-w-sm">
                 <Card className="h-full border-2 hover:border-primary/50 transition-all duration-300 hover:shadow-xl hover:-translate-y-2 bg-gradient-to-br from-gray-50 to-white">
                   <CardContent className="p-6 text-center">
                     <div className="flex justify-center mb-4">
