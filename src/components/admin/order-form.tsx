@@ -232,7 +232,7 @@ export function OrderForm({ order, onSave, onCancel }: OrderFormProps) {
               </Button>
             </div>
             <div className="space-y-3">
-              {formData.items.map((item, index) => (
+              {formData.items.map((item: any, index: number) => (
                 <div key={index} className="grid grid-cols-12 gap-2 items-end">
                   <div className="col-span-8">
                     <Input
