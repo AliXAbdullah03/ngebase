@@ -2870,11 +2870,20 @@ function UserManagementTab({ currentUser }: { currentUser: any }) {
 }
 
 // Web Page Management Tab Component
+// Hero image type
+type HeroImage = {
+  id: number;
+  name: string;
+  path?: string;
+  url?: string;
+  title?: string;
+};
+
 function WebPageManagementTab() {
   const [activeSubTab, setActiveSubTab] = useState("images");
   
   // Load hero images from localStorage or use default
-  const loadHeroImages = () => {
+  const loadHeroImages = (): HeroImage[] => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('heroImages');
       if (saved) {
@@ -2892,7 +2901,7 @@ function WebPageManagementTab() {
     ];
   };
 
-  const [heroImages, setHeroImages] = useState(loadHeroImages());
+  const [heroImages, setHeroImages] = useState<HeroImage[]>(loadHeroImages());
   const [reviews, setReviews] = useState([
     { id: 1, platform: 'Google', image: '', rating: 5 },
     { id: 2, platform: 'Facebook', image: '', rating: 5 },
@@ -2943,7 +2952,7 @@ function WebPageManagementTab() {
 
   const confirmDeleteHeroImage = () => {
     if (!imageToDelete) return;
-    setHeroImages(heroImages.filter(img => img.id !== imageToDelete));
+    setHeroImages(heroImages.filter((img: HeroImage) => img.id !== imageToDelete));
     toast({
       title: "Success",
       description: "Image removed from slider",
