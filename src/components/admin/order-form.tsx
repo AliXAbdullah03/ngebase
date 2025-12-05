@@ -110,7 +110,7 @@ export function OrderForm({ order, onSave, onCancel }: OrderFormProps) {
 
   const removeItem = (index: number) => {
     setFormData(prevFormData => {
-      const newItems = prevFormData.items.filter((_, i) => i !== index);
+      const newItems = prevFormData.items.filter((_item: any, i: number) => i !== index);
       return {
         ...prevFormData,
         items: newItems,
