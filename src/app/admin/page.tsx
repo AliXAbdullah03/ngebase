@@ -3537,10 +3537,6 @@ function UserManagementTab({ currentUser }: { currentUser: any }) {
           }
           
           setUsers(usersData);
-          
-          if (fetchResult.data?.pagination) {
-            setTotalPages(fetchResult.data.pagination.totalPages || 1);
-          }
         }
       } catch (fetchErr) {
         console.error('Error refetching users after deletion:', fetchErr);
