@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Save, X } from 'lucide-react';
 
 interface CustomerFormProps {
@@ -22,7 +21,6 @@ export function CustomerForm({ customer, onSave, onCancel }: CustomerFormProps) 
     address: customer?.address || '',
     city: customer?.city || '',
     country: customer?.country || '',
-    status: customer?.status || 'active',
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -100,19 +98,6 @@ export function CustomerForm({ customer, onSave, onCancel }: CustomerFormProps) 
             onChange={(e) => setFormData({ ...formData, country: e.target.value })}
           />
         </div>
-      </div>
-
-      <div>
-        <Label htmlFor="status">Status</Label>
-        <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="inactive">Inactive</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
 
       <div className="flex justify-end gap-2 pt-4">

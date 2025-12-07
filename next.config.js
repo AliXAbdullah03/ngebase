@@ -14,6 +14,8 @@ const nextConfig = {
         pathname: '/**',
       },
     ],
+    // Ensure static images from public folder are served correctly
+    formats: ['image/avif', 'image/webp'],
   },
 };
 

@@ -25,22 +25,22 @@ const getHeroImages = () => {
       }
     }
   }
-  // Default fallback images
+  // Default fallback images - use existing images or placeholder
   return [
     {
       id: 1,
       title: "Global Reach, Personal Touch.",
-      image: "/hero-images/hero-1.jpg",
+      image: "/hero-images/image1.jpg",
     },
     {
       id: 2,
       title: "Fast. Reliable. Secure.",
-      image: "/hero-images/hero-2.jpg",
+      image: "/hero-images/image2.jpg",
     },
     {
       id: 3,
       title: "Worldwide Network.",
-      image: "/hero-images/hero-3.jpg",
+      image: "/hero-images/logistics-in-india-scaled.webp",
     }
   ];
 };
@@ -188,6 +188,13 @@ export function HeroSlider() {
                       className="object-cover rounded-xl"
                       priority={index === 0}
                       sizes="50vw"
+                      unoptimized={item.image.endsWith('.webp')}
+                      onError={(e) => {
+                        console.error('Failed to load image:', item.image);
+                        // Fallback to a placeholder or hide the image
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                      }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none rounded-xl"></div>
                   </div>

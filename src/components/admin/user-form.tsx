@@ -58,7 +58,65 @@ export function UserForm({ user, onSave, onCancel }: UserFormProps) {
             rolesList = [];
           }
           
-          setRoles(rolesList);
+          // Filter and map roles to ensure we only show valid roles
+          const validRoles = ['Driver', 'Super Admin', 'Admin', 'Hub Receiver'];
+          const roleNameMap: Record<string, string> = {
+            'Staff': 'Hub Receiver',
+            'Manager': 'Admin',
+            'staff': 'Hub Receiver',
+            'manager': 'Admin',
+            'Staff Member': 'Hub Receiver',
+            'Manager Role': 'Admin',
+          };
+          
+          const filteredRoles = rolesList
+            .map((role: any) => {
+              let roleName = role.name || role.role || 'Unknown';
+              
+              // Map old role names to correct role names
+              if (roleNameMap[roleName]) {
+                roleName = roleNameMap[roleName];
+              }
+              
+              // Try to find a match if not exact
+              if (!validRoles.includes(roleName)) {
+                const matchedRole = validRoles.find(r => 
+                  r.toLowerCase() === roleName.toLowerCase() ||
+                  roleName.toLowerCase().includes(r.toLowerCase()) ||
+                  r.toLowerCase().includes(roleName.toLowerCase())
+                );
+                if (matchedRole) {
+                  roleName = matchedRole;
+                }
+              }
+              
+              // Only include if it's a valid role
+              if (validRoles.includes(roleName)) {
+                return {
+                  ...role,
+                  name: roleName,
+                  displayName: roleName,
+                };
+              }
+              return null;
+            })
+            .filter((role: any) => role !== null);
+          
+          // If no roles found from backend, create default roles based on validRoles
+          if (filteredRoles.length === 0) {
+            console.warn('No valid roles found from backend. Using default roles.');
+            // This is a fallback - ideally the backend should have these roles
+            filteredRoles.push(
+              ...validRoles.map(roleName => ({
+                id: roleName.toLowerCase().replace(' ', '_'),
+                _id: roleName.toLowerCase().replace(' ', '_'),
+                name: roleName,
+                displayName: roleName,
+              }))
+            );
+          }
+          
+          setRoles(filteredRoles);
         }
 
         // Fetch branches - handle all possible response structures
@@ -174,15 +232,24 @@ export function UserForm({ user, onSave, onCancel }: UserFormProps) {
                 <SelectValue placeholder={loading ? "Loading roles..." : "Select role"} />
               </SelectTrigger>
               <SelectContent>
-                {roles.map((role) => {
-                  const roleId = role.id || role._id;
-                  const roleName = role.name || role.role || 'Unknown';
-                  return (
-                    <SelectItem key={roleId} value={roleId}>
-                      {roleName}
-                    </SelectItem>
-                  );
-                })}
+                {roles.length === 0 ? (
+                  <div className="px-2 py-1.5 text-sm text-muted-foreground">No roles available</div>
+                ) : (
+                  roles.map((role) => {
+                    const roleId = role.id || role._id;
+                    // Ensure roleId is not empty
+                    if (!roleId || roleId === '') {
+                      return null;
+                    }
+                    const roleName = role.displayName || role.name || role.role || 'Unknown';
+                    
+                    return (
+                      <SelectItem key={roleId} value={roleId}>
+                        {roleName}
+                      </SelectItem>
+                    );
+                  }).filter(Boolean)
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -201,13 +268,17 @@ export function UserForm({ user, onSave, onCancel }: UserFormProps) {
                 <SelectItem value="none">None</SelectItem>
                 {branches.map((branch) => {
                   const branchId = branch.id || branch._id;
+                  // Ensure branchId is not empty
+                  if (!branchId || branchId === '') {
+                    return null;
+                  }
                   const branchName = branch.name || 'Unknown';
                   return (
                     <SelectItem key={branchId} value={branchId}>
                       {branchName}
                     </SelectItem>
                   );
-                })}
+                }).filter(Boolean)}
               </SelectContent>
             </Select>
           </div>

@@ -1,5 +1,5 @@
 // Role-based permission system
-export type UserRole = 'Super Admin' | 'Admin' | 'Hub Receiver';
+export type UserRole = 'Driver' | 'Super Admin' | 'Admin' | 'Hub Receiver';
 
 export interface User {
   id: string;
@@ -39,6 +39,10 @@ export const Permissions = {
 
 // Role permissions mapping
 export const RolePermissions: Record<UserRole, string[]> = {
+  'Driver': [
+    Permissions.SHIPMENT_VIEW,
+    Permissions.SHIPMENT_STATUS_UPDATE,
+  ],
   'Hub Receiver': [
     Permissions.ORDER_CREATE,
     Permissions.ORDER_VIEW,

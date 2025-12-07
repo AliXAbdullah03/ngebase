@@ -21,8 +21,20 @@ interface OrderFormProps {
 }
 
 export function OrderForm({ order, onSave, onCancel }: OrderFormProps) {
+  // If editing an order, use existing customer data, otherwise start with empty customer fields
+  const existingCustomer = order?.customerId || order?.customer;
+  
   const [formData, setFormData] = useState({
-    customerId: order?.customerId || order?.customerId?._id || order?.customerId?.id || '',
+    // Customer fields (for new orders or editing)
+    customerFirstName: existingCustomer?.firstName || order?.customerFirstName || '',
+    customerLastName: existingCustomer?.lastName || order?.customerLastName || '',
+    customerEmail: existingCustomer?.email || order?.customerEmail || '',
+    customerPhone: existingCustomer?.phone || order?.customerPhone || '',
+    customerAddress: existingCustomer?.address || order?.customerAddress || '',
+    customerCity: existingCustomer?.city || order?.customerCity || '',
+    customerCountry: existingCustomer?.country || order?.customerCountry || '',
+    // Order fields
+    customerId: order?.customerId?._id || order?.customerId?.id || order?.customerId || '',
     branchId: order?.branchId || order?.branchId?._id || order?.branchId?.id || '',
     items: order?.items || [{ description: '', quantity: 1 }],
     totalAmount: order?.totalAmount || 0,
@@ -31,35 +43,14 @@ export function OrderForm({ order, onSave, onCancel }: OrderFormProps) {
   });
 
   const [departureDateOpen, setDepartureDateOpen] = useState(false);
-  const [customers, setCustomers] = useState<any[]>([]);
   const [branches, setBranches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch customers and branches from backend
+  // Fetch branches from backend
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        
-        // Fetch customers
-        const customersRes = await apiRequest('/customers?limit=100');
-        if (customersRes.ok) {
-          const customersData = await customersRes.json();
-          let customersList = [];
-          
-          if (customersData.data) {
-            if (Array.isArray(customersData.data)) {
-              customersList = customersData.data;
-            } else if (customersData.data.customers && Array.isArray(customersData.data.customers)) {
-              customersList = customersData.data.customers;
-            } else if (customersData.data.items && Array.isArray(customersData.data.items)) {
-              customersList = customersData.data.items;
-            }
-          }
-          
-          if (!Array.isArray(customersList)) customersList = [];
-          setCustomers(customersList);
-        }
 
         // Fetch branches
         const branchesRes = await apiRequest('/branches');
@@ -121,9 +112,21 @@ export function OrderForm({ order, onSave, onCancel }: OrderFormProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Prepare customer data and order data
+    const customerData = {
+      firstName: formData.customerFirstName,
+      lastName: formData.customerLastName,
+      email: formData.customerEmail,
+      phone: formData.customerPhone,
+      address: formData.customerAddress,
+      city: formData.customerCity,
+      country: formData.customerCountry,
+    };
+    
     // Convert empty branchId to null
     const submitData = {
       ...formData,
+      customerData, // Include customer data for processing
       branchId: formData.branchId && formData.branchId !== 'none' ? formData.branchId : null,
       departureDate: formData.departureDate?.toISOString(),
     };
@@ -138,34 +141,93 @@ export function OrderForm({ order, onSave, onCancel }: OrderFormProps) {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="customerId">Customer *</Label>
-              <Select
-                value={formData.customerId}
-                onValueChange={(value) => setFormData({ ...formData, customerId: value })}
-                disabled={loading}
-                required
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={loading ? "Loading customers..." : "Select customer"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {customers.map((customer) => {
-                    const customerId = customer.id || customer._id;
-                    const customerName = `${customer.firstName || ''} ${customer.lastName || ''}`.trim() || customer.email || 'Unknown';
-                    return (
-                      <SelectItem key={customerId} value={customerId}>
-                        {customerName} {customer.email ? `(${customer.email})` : ''}
-                      </SelectItem>
-                    );
-                  })}
-                  {customers.length === 0 && !loading && (
-                    <SelectItem value="" disabled>No customers found</SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
+          {/* Customer Information Section */}
+          <div className="border rounded-lg p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Customer Information</h3>
+              {order?.customerId && (
+                <span className="text-sm text-muted-foreground">(Read-only for existing orders)</span>
+              )}
             </div>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="customerFirstName">First Name *</Label>
+                <Input
+                  id="customerFirstName"
+                  value={formData.customerFirstName}
+                  onChange={(e) => setFormData({ ...formData, customerFirstName: e.target.value })}
+                  required
+                  disabled={!!order?.customerId} // Disable if editing existing order with customer
+                />
+              </div>
+              <div>
+                <Label htmlFor="customerLastName">Last Name *</Label>
+                <Input
+                  id="customerLastName"
+                  value={formData.customerLastName}
+                  onChange={(e) => setFormData({ ...formData, customerLastName: e.target.value })}
+                  required
+                  disabled={!!order?.customerId}
+                />
+              </div>
+            </div>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="customerEmail">Email *</Label>
+                <Input
+                  id="customerEmail"
+                  type="email"
+                  value={formData.customerEmail}
+                  onChange={(e) => setFormData({ ...formData, customerEmail: e.target.value })}
+                  required
+                  disabled={!!order?.customerId}
+                />
+              </div>
+              <div>
+                <Label htmlFor="customerPhone">Phone *</Label>
+                <Input
+                  id="customerPhone"
+                  value={formData.customerPhone}
+                  onChange={(e) => setFormData({ ...formData, customerPhone: e.target.value })}
+                  required
+                  disabled={!!order?.customerId}
+                  placeholder="Used to match existing customers"
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="customerAddress">Address</Label>
+              <Input
+                id="customerAddress"
+                value={formData.customerAddress}
+                onChange={(e) => setFormData({ ...formData, customerAddress: e.target.value })}
+                disabled={!!order?.customerId}
+              />
+            </div>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="customerCity">City</Label>
+                <Input
+                  id="customerCity"
+                  value={formData.customerCity}
+                  onChange={(e) => setFormData({ ...formData, customerCity: e.target.value })}
+                  disabled={!!order?.customerId}
+                />
+              </div>
+              <div>
+                <Label htmlFor="customerCountry">Country</Label>
+                <Input
+                  id="customerCountry"
+                  value={formData.customerCountry}
+                  onChange={(e) => setFormData({ ...formData, customerCountry: e.target.value })}
+                  disabled={!!order?.customerId}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Order Details Section */}
+          <div className="grid md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="branchId">Branch</Label>
               <Select
@@ -180,15 +242,19 @@ export function OrderForm({ order, onSave, onCancel }: OrderFormProps) {
                   <SelectItem value="none">None</SelectItem>
                   {branches.map((branch) => {
                     const branchId = branch.id || branch._id;
+                    // Ensure branchId is not empty
+                    if (!branchId || branchId === '') {
+                      return null;
+                    }
                     const branchName = branch.name || 'Unknown';
                     return (
                       <SelectItem key={branchId} value={branchId}>
                         {branchName}
                       </SelectItem>
                     );
-                  })}
+                  }).filter(Boolean)}
                   {branches.length === 0 && !loading && (
-                    <SelectItem value="" disabled>No branches found</SelectItem>
+                    <div className="px-2 py-1.5 text-sm text-muted-foreground">No branches found</div>
                   )}
                 </SelectContent>
               </Select>

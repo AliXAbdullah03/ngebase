@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { EnhancedHeader } from '@/components/enhanced-header';
-import { EnhancedFooter } from '@/components/enhanced-footer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -49,10 +47,13 @@ import {
   Star,
   X,
   Clock,
-  Loader2
+  Loader2,
+  Home,
+  ChevronDown,
+  ChevronRight
 } from 'lucide-react';
 import Image from 'next/image';
-import { getCurrentUser, hasPermission, Permissions, type UserRole } from '@/lib/auth';
+import { getCurrentUser, hasPermission, Permissions, RolePermissions, type UserRole } from '@/lib/auth';
 import { getApiUrl, apiRequest } from '@/lib/api';
 import { toast } from '@/hooks/use-toast';
 
@@ -86,9 +87,20 @@ export default function AdminPage() {
     checkAuth();
   }, [router]);
 
+  // Handle logout and redirect to home
+  const handleHome = () => {
+    // Clear authentication tokens
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('authToken');
+      sessionStorage.removeItem('authToken');
+    }
+    // Redirect to home page
+    router.push('/');
+  };
+
   // Show loading state while checking authentication
   if (isCheckingAuth) {
-    return (
+  return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-primary/5 via-background to-primary/5">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
@@ -100,9 +112,7 @@ export default function AdminPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <EnhancedHeader />
-      
-      <main className="flex-grow pt-20 bg-gradient-to-br from-primary/5 via-background to-primary/5">
+      <main className="flex-grow bg-gradient-to-br from-primary/5 via-background to-primary/5">
         <div className="container mx-auto px-4 md:px-6 py-8">
           {/* Header */}
           <div className="mb-8">
@@ -115,15 +125,25 @@ export default function AdminPage() {
                   Manage your logistics operations and website content
                 </p>
               </div>
-              <Badge variant="outline" className="text-lg px-4 py-2">
-                {currentUser?.role || 'User'}
-              </Badge>
+              <div className="flex items-center gap-4">
+                <Badge variant="outline" className="text-lg px-4 py-2">
+                  {currentUser?.role || 'User'}
+                </Badge>
+                <Button 
+                  onClick={handleHome}
+                  variant="outline"
+                  className="flex items-center gap-2"
+                >
+                  <Home className="w-4 h-4" />
+                  <span>Home</span>
+        </Button>
+              </div>
             </div>
           </div>
 
           {/* Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8 mb-8 h-auto">
+            <TabsList className="grid w-full grid-cols-4 lg:grid-cols-9 mb-8 h-auto">
               <TabsTrigger value="dashboard" className="flex items-center gap-2">
                 <BarChart3 className="w-4 h-4" />
                 <span className="hidden sm:inline">Dashboard</span>
@@ -148,6 +168,12 @@ export default function AdminPage() {
                 <TabsTrigger value="users" className="flex items-center gap-2">
                   <UserCog className="w-4 h-4" />
                   <span className="hidden sm:inline">Users</span>
+                </TabsTrigger>
+              )}
+              {hasPermission(currentUser, Permissions.USER_VIEW) && (
+                <TabsTrigger value="roles" className="flex items-center gap-2">
+                  <Shield className="w-4 h-4" />
+                  <span className="hidden sm:inline">Roles</span>
                 </TabsTrigger>
               )}
               {hasPermission(currentUser, Permissions.FRONTEND_EDIT) && (
@@ -196,6 +222,13 @@ export default function AdminPage() {
               </TabsContent>
             )}
 
+            {/* Roles Management Tab */}
+            {hasPermission(currentUser, Permissions.USER_VIEW) && (
+              <TabsContent value="roles">
+                <RolesManagementTab />
+              </TabsContent>
+            )}
+
             {/* Web Page Management Tab */}
             {hasPermission(currentUser, Permissions.FRONTEND_EDIT) && (
               <TabsContent value="webpage">
@@ -205,8 +238,6 @@ export default function AdminPage() {
           </Tabs>
         </div>
       </main>
-
-      <EnhancedFooter />
     </div>
   );
 }
@@ -311,13 +342,13 @@ function DashboardTab({ currentUser, onNewOrder }: { currentUser: any; onNewOrde
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           {[1, 2, 3, 4].map((i) => (
             <Card key={i} className="border-2 border-primary/20 shadow-xl">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Loading...</CardTitle>
-              </CardHeader>
-              <CardContent>
+          </CardHeader>
+          <CardContent>
                 <div className="text-3xl font-bold animate-pulse">---</div>
-              </CardContent>
-            </Card>
+          </CardContent>
+        </Card>
           ))}
         </div>
       </div>
@@ -459,15 +490,15 @@ function DashboardTab({ currentUser, onNewOrder }: { currentUser: any; onNewOrde
           const Icon = stat.icon;
           return (
             <Card key={index} className="border-2 border-primary/20 shadow-xl">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">{stat.label}</CardTitle>
                 <Icon className={`h-5 w-5 ${stat.color}`} />
-              </CardHeader>
-              <CardContent>
+          </CardHeader>
+          <CardContent>
                 <div className="text-3xl font-bold">{stat.value}</div>
                 <p className="text-xs text-muted-foreground mt-1">Live data from database</p>
-              </CardContent>
-            </Card>
+          </CardContent>
+        </Card>
           );
         })}
       </div>
@@ -486,9 +517,6 @@ function DashboardTab({ currentUser, onNewOrder }: { currentUser: any; onNewOrde
                     <div>
                       <p className="font-medium">{order.orderNumber}</p>
                       <p className="text-sm text-muted-foreground">{order.customer}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        ${order.amount?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </p>
                     </div>
                     <Badge variant={order.status === 'completed' ? 'default' : 'secondary'}>
                       {order.status}
@@ -563,7 +591,7 @@ function DashboardTab({ currentUser, onNewOrder }: { currentUser: any; onNewOrde
                 <Building2 className="w-5 h-5 mb-2" />
                 Add Branch
               </Button>
-            </div>
+      </div>
           </CardContent>
         </Card>
       </div>
@@ -662,9 +690,12 @@ function CustomerManagementTab() {
 
   const handleCreateCustomer = async (data: any) => {
     try {
+      // Remove status field if it exists (we don't use status anymore)
+      const { status, ...customerData } = data;
+      
       const response = await apiRequest('/customers', {
         method: 'POST',
-        body: JSON.stringify(data),
+        body: JSON.stringify(customerData),
       });
 
       if (!response.ok) {
@@ -747,10 +778,13 @@ function CustomerManagementTab() {
     if (!editingCustomer) return;
 
     try {
+      // Remove status field if it exists (we don't use status anymore)
+      const { status, ...customerData } = data;
+      
       const customerId = editingCustomer.id || editingCustomer._id;
       const response = await apiRequest(`/customers/${customerId}`, {
         method: 'PUT',
-        body: JSON.stringify(data),
+        body: JSON.stringify(customerData),
       });
 
       if (!response.ok) {
@@ -790,19 +824,94 @@ function CustomerManagementTab() {
   };
 
   const confirmDeleteCustomer = async () => {
-    if (!customerToDelete) return;
+    console.log('confirmDeleteCustomer called with customerToDelete:', customerToDelete);
+    
+    if (!customerToDelete) {
+      console.warn('No customer ID to delete');
+      return;
+    }
 
     try {
-      const response = await apiRequest(`/customers/${customerToDelete}`, {
+      // Log the API URL and endpoint for debugging
+      const apiUrl = getApiUrl();
+      const endpoint = `/customers/${customerToDelete}`;
+      const fullUrl = `${apiUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+      console.log('Deleting customer:', {
+        customerId: customerToDelete,
+        endpoint,
+        fullUrl,
+        apiUrl,
+        method: 'DELETE'
+      });
+
+      const response = await apiRequest(endpoint, {
         method: 'DELETE',
       });
 
+      console.log('Delete response:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      });
+
       if (!response.ok) {
-        throw new Error('Failed to delete customer');
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error?.message || errorData.message || `HTTP error! status: ${response.status}`;
+        console.error('Delete failed:', errorMessage, errorData);
+        throw new Error(errorMessage);
       }
 
-      // Remove customer from the list
-      setCustomers(prevCustomers => prevCustomers.filter(c => (c.id || c._id) !== customerToDelete));
+      const result = await response.json();
+      
+      // Verify deletion was successful
+      if (result.success === false) {
+        throw new Error(result.error?.message || 'Failed to delete customer');
+      }
+
+      // Refetch customers from backend to ensure we have the latest data
+      try {
+        const params = new URLSearchParams({
+          page: page.toString(),
+          limit: '10',
+        });
+        
+        if (searchQuery) {
+          params.append('search', searchQuery);
+        }
+
+        const fetchResponse = await apiRequest(`/customers?${params.toString()}`, {
+          method: 'GET',
+        });
+
+        if (fetchResponse.ok) {
+          const fetchResult = await fetchResponse.json();
+          let customersData = [];
+          
+          if (fetchResult.data) {
+            if (Array.isArray(fetchResult.data)) {
+              customersData = fetchResult.data;
+            } else if (fetchResult.data.customers && Array.isArray(fetchResult.data.customers)) {
+              customersData = fetchResult.data.customers;
+            } else if (fetchResult.data.items && Array.isArray(fetchResult.data.items)) {
+              customersData = fetchResult.data.items;
+            }
+          }
+          
+          if (!Array.isArray(customersData)) {
+            customersData = [];
+          }
+          
+          setCustomers(customersData);
+          
+          if (fetchResult.data?.pagination) {
+            setTotalPages(fetchResult.data.pagination.totalPages || 1);
+          }
+        }
+      } catch (fetchErr) {
+        console.error('Error refetching customers after deletion:', fetchErr);
+        // Fallback: remove from local state
+        setCustomers(prevCustomers => prevCustomers.filter(c => (c.id || c._id) !== customerToDelete));
+      }
       
       toast({
         title: "Success",
@@ -934,14 +1043,13 @@ function CustomerManagementTab() {
             </div>
           ) : (
             <>
-              <Table>
-                <TableHeader>
-                  <TableRow>
+          <Table>
+            <TableHeader>
+              <TableRow>
                     <TableHead>Name</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Phone</TableHead>
                     <TableHead>Address</TableHead>
-                    <TableHead>Status</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -955,11 +1063,6 @@ function CustomerManagementTab() {
                       <TableCell>{customer.phone || 'N/A'}</TableCell>
                       <TableCell className="max-w-xs truncate">
                         {customer.address || customer.city || 'N/A'}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={customer.status === 'active' ? 'default' : 'secondary'}>
-                          {customer.status || 'active'}
-                        </Badge>
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-2">
@@ -1131,9 +1234,85 @@ function OrdersTab({ currentUser, openCreateForm: initialOpenForm = false, onFor
 
   const handleCreateOrder = async (data: any) => {
     try {
+      let customerId = data.customerId;
+      
+      // If customer data is provided (new order), check for existing customer or create new one
+      if (data.customerData && !customerId) {
+        const { customerData } = data;
+        
+        // Check if customer with this phone number exists
+        if (customerData.phone) {
+          try {
+            // Normalize phone number for comparison (remove spaces, dashes, etc.)
+            const normalizePhone = (phone: string) => phone.replace(/[\s\-\(\)]/g, '').trim();
+            const normalizedSearchPhone = normalizePhone(customerData.phone);
+            
+            const searchResponse = await apiRequest(`/customers?search=${encodeURIComponent(customerData.phone)}&limit=100`);
+            if (searchResponse.ok) {
+              const searchResult = await searchResponse.json();
+              let customersList = [];
+              
+              if (searchResult.data) {
+                if (Array.isArray(searchResult.data)) {
+                  customersList = searchResult.data;
+                } else if (searchResult.data.customers && Array.isArray(searchResult.data.customers)) {
+                  customersList = searchResult.data.customers;
+                } else if (searchResult.data.items && Array.isArray(searchResult.data.items)) {
+                  customersList = searchResult.data.items;
+                }
+              }
+              
+              // Find customer with matching phone number (normalized comparison)
+              const existingCustomer = customersList.find((c: any) => 
+                c.phone && normalizePhone(c.phone) === normalizedSearchPhone
+              );
+              
+              if (existingCustomer) {
+                // Use existing customer
+                customerId = existingCustomer.id || existingCustomer._id;
+                console.log('Using existing customer:', customerId);
+              } else {
+                // Create new customer
+                console.log('Creating new customer with phone:', customerData.phone);
+                const createCustomerResponse = await apiRequest('/customers', {
+                  method: 'POST',
+                  body: JSON.stringify(customerData),
+                });
+                
+                if (createCustomerResponse.ok) {
+                  const customerResult = await createCustomerResponse.json();
+                  const newCustomer = customerResult.data || customerResult;
+                  customerId = newCustomer.id || newCustomer._id;
+                  console.log('New customer created:', customerId);
+                } else {
+                  const errorData = await createCustomerResponse.json().catch(() => ({}));
+                  throw new Error(errorData.error?.message || errorData.message || 'Failed to create customer');
+                }
+              }
+            }
+          } catch (err: any) {
+            console.error('Error checking/creating customer:', err);
+            throw new Error('Failed to process customer: ' + err.message);
+          }
+        } else {
+          throw new Error('Phone number is required to create or match customer');
+        }
+      }
+      
+      if (!customerId) {
+        throw new Error('Customer ID is required');
+      }
+      
+      // Prepare order data without customerData
+      const { customerData, ...orderData } = data;
+      const orderPayload = {
+        ...orderData,
+        customerId,
+      };
+      
       const response = await apiRequest('/orders', {
         method: 'POST',
-        body: JSON.stringify(data),
+        body: JSON.stringify(orderPayload),
       });
 
       if (!response.ok) {
@@ -1202,9 +1381,18 @@ function OrdersTab({ currentUser, openCreateForm: initialOpenForm = false, onFor
   const handleModifyOrder = async (data: any) => {
     try {
       const orderId = editingOrder.id || editingOrder._id;
+      
+      // When editing, use existing customerId (don't create new customers)
+      const { customerData, ...orderData } = data;
+      const orderPayload = {
+        ...orderData,
+        // Keep existing customerId if available, otherwise use from formData
+        customerId: data.customerId || editingOrder.customerId?._id || editingOrder.customerId?.id || editingOrder.customerId,
+      };
+      
       const response = await apiRequest(`/orders/${orderId}`, {
         method: 'PUT',
-        body: JSON.stringify(data),
+        body: JSON.stringify(orderPayload),
       });
 
       if (!response.ok) {
@@ -1230,6 +1418,161 @@ function OrdersTab({ currentUser, openCreateForm: initialOpenForm = false, onFor
     }
   };
 
+  const handleCreateShipmentsFromOrders = async () => {
+    try {
+      // Group orders by departure date
+      const ordersByDate: { [key: string]: any[] } = {};
+      
+      orders.forEach((order: any) => {
+        if (order.departureDate) {
+          const dateKey = new Date(order.departureDate).toISOString().split('T')[0]; // YYYY-MM-DD
+          if (!ordersByDate[dateKey]) {
+            ordersByDate[dateKey] = [];
+          }
+          // Only include orders that don't already have a shipment
+          if (!order.shipmentId && !order.shipment) {
+            ordersByDate[dateKey].push(order);
+          }
+        }
+      });
+
+      // Filter out dates with no orders
+      const datesWithOrders = Object.keys(ordersByDate).filter(date => ordersByDate[date].length > 0);
+
+      if (datesWithOrders.length === 0) {
+        toast({
+          title: "No Orders Available",
+          description: "No orders with departure dates found, or all orders are already assigned to shipments.",
+          variant: "default",
+        });
+        return;
+      }
+
+      // Create shipments for each departure date
+      let createdCount = 0;
+      for (const date of datesWithOrders) {
+        const ordersForDate = ordersByDate[date];
+        const orderIds = ordersForDate.map(o => o.id || o._id);
+
+        try {
+          const response = await apiRequest('/shipments/create-from-orders', {
+            method: 'POST',
+            body: JSON.stringify({
+              departureDate: date,
+              orderIds: orderIds,
+            }),
+          });
+
+          if (response.ok) {
+            const result = await response.json();
+            if (result.success) {
+              createdCount++;
+            }
+          }
+        } catch (err) {
+          console.error(`Error creating shipment for date ${date}:`, err);
+        }
+      }
+
+      if (createdCount > 0) {
+        toast({
+          title: "Success",
+          description: `Created ${createdCount} shipment(s) from orders grouped by departure date.`,
+          variant: "default",
+        });
+        // Refresh orders list
+        const fetchResponse = await apiRequest(`/orders?page=${page}&limit=10`, {
+          method: 'GET',
+        });
+        if (fetchResponse.ok) {
+          const fetchResult = await fetchResponse.json();
+          let ordersData = [];
+          if (fetchResult.data) {
+            if (Array.isArray(fetchResult.data)) {
+              ordersData = fetchResult.data;
+            } else if (fetchResult.data.orders && Array.isArray(fetchResult.data.orders)) {
+              ordersData = fetchResult.data.orders;
+            } else if (fetchResult.data.items && Array.isArray(fetchResult.data.items)) {
+              ordersData = fetchResult.data.items;
+            }
+          }
+          if (Array.isArray(ordersData)) {
+            setOrders(ordersData);
+          }
+        }
+      } else {
+        toast({
+          title: "Warning",
+          description: "No shipments were created. Please check if orders have departure dates.",
+          variant: "destructive",
+        });
+      }
+    } catch (err: any) {
+      console.error('Error creating shipments:', err);
+      toast({
+        title: "Error",
+        description: "Failed to create shipments: " + err.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleOrderStatusChange = async (orderId: string | number, newStatus: string) => {
+    if (!hasPermission(currentUser, Permissions.ORDER_MODIFY)) {
+      toast({
+        title: "Permission Denied",
+        description: "You do not have permission to modify orders",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const response = await apiRequest(`/orders/${orderId}/status`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          status: newStatus,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error?.message || errorData.message || `HTTP error! status: ${response.status}`;
+        throw new Error(errorMessage);
+      }
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error?.message || 'Failed to update order status');
+      }
+
+      // Update order in the list
+      setOrders(prevOrders => 
+        prevOrders.map(o => {
+          const oId = o.id || o._id;
+          if (oId === orderId) {
+            return { ...o, status: newStatus };
+          }
+          return o;
+        })
+      );
+
+      toast({
+        title: "Success",
+        description: `Order status updated to ${newStatus}`,
+        variant: "default",
+      });
+    } catch (err: any) {
+      console.error('Error updating order status:', err);
+      toast({
+        title: "Error",
+        description: "Failed to update order status: " + err.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleDeleteOrder = (id: string | number) => {
     if (!hasPermission(currentUser, Permissions.ORDER_DELETE)) {
       toast({
@@ -1246,16 +1589,85 @@ function OrdersTab({ currentUser, openCreateForm: initialOpenForm = false, onFor
     if (!orderToDelete) return;
 
     try {
-      const response = await apiRequest(`/orders/${orderToDelete}`, {
+      // Log the API URL and endpoint for debugging
+      const apiUrl = getApiUrl();
+      const endpoint = `/orders/${orderToDelete}`;
+      const fullUrl = `${apiUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+      console.log('Deleting order:', {
+        orderId: orderToDelete,
+        endpoint,
+        fullUrl,
+        apiUrl
+      });
+
+      const response = await apiRequest(endpoint, {
         method: 'DELETE',
       });
 
+      console.log('Delete response:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      });
+
       if (!response.ok) {
-        throw new Error('Failed to delete order');
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error?.message || errorData.message || `HTTP error! status: ${response.status}`;
+        console.error('Delete failed:', errorMessage, errorData);
+        throw new Error(errorMessage);
       }
 
-      // Remove from list
-      setOrders(prevOrders => prevOrders.filter(o => (o.id || o._id) !== orderToDelete));
+      const result = await response.json();
+      
+      // Verify deletion was successful
+      if (result.success === false) {
+        throw new Error(result.error?.message || 'Failed to delete order');
+      }
+
+      // Refetch orders from backend to ensure we have the latest data
+      try {
+        const params = new URLSearchParams({
+          page: page.toString(),
+          limit: '10',
+        });
+        
+        if (searchQuery) {
+          params.append('search', searchQuery);
+        }
+
+        const fetchResponse = await apiRequest(`/orders?${params.toString()}`, {
+          method: 'GET',
+        });
+
+        if (fetchResponse.ok) {
+          const fetchResult = await fetchResponse.json();
+          let ordersData = [];
+          
+          if (fetchResult.data) {
+            if (Array.isArray(fetchResult.data)) {
+              ordersData = fetchResult.data;
+            } else if (fetchResult.data.orders && Array.isArray(fetchResult.data.orders)) {
+              ordersData = fetchResult.data.orders;
+            } else if (fetchResult.data.items && Array.isArray(fetchResult.data.items)) {
+              ordersData = fetchResult.data.items;
+            }
+          }
+          
+          if (!Array.isArray(ordersData)) {
+            ordersData = [];
+          }
+          
+          setOrders(ordersData);
+          
+          if (fetchResult.data?.pagination) {
+            setTotalPages(fetchResult.data.pagination.totalPages || 1);
+          }
+        }
+      } catch (fetchErr) {
+        console.error('Error refetching orders after deletion:', fetchErr);
+        // Fallback: remove from local state
+        setOrders(prevOrders => prevOrders.filter(o => (o.id || o._id) !== orderToDelete));
+      }
       
       toast({
         title: "Success",
@@ -1304,25 +1716,37 @@ function OrdersTab({ currentUser, openCreateForm: initialOpenForm = false, onFor
               <CardTitle className="text-2xl">Orders Management</CardTitle>
               <CardDescription>View and manage all orders</CardDescription>
             </div>
-            {hasPermission(currentUser, Permissions.ORDER_CREATE) && (
-              <Dialog open={showCreateForm} onOpenChange={handleDialogChange}>
-                <DialogTrigger asChild>
-                  <Button 
-                    className="bg-primary hover:bg-primary/90"
-                    onClick={() => setShowCreateForm(true)}
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Create Order
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>Create New Order</DialogTitle>
-                  </DialogHeader>
-                  <OrderForm onSave={handleCreateOrder} onCancel={handleFormClose} />
-                </DialogContent>
-              </Dialog>
-            )}
+            <div className="flex gap-2">
+              {hasPermission(currentUser, Permissions.ORDER_CREATE) && (
+                <Dialog open={showCreateForm} onOpenChange={handleDialogChange}>
+                  <DialogTrigger asChild>
+                    <Button 
+                      className="bg-primary hover:bg-primary/90"
+                      onClick={() => setShowCreateForm(true)}
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Create Order
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Create New Order</DialogTitle>
+                    </DialogHeader>
+                    <OrderForm onSave={handleCreateOrder} onCancel={handleFormClose} />
+                  </DialogContent>
+                </Dialog>
+              )}
+              {hasPermission(currentUser, Permissions.ORDER_MODIFY) && (
+                <Button 
+                  variant="outline"
+                  onClick={handleCreateShipmentsFromOrders}
+                  disabled={loading || orders.length === 0}
+                >
+                  <Layers className="w-4 h-4 mr-2" />
+                  Create Shipments from Orders
+                </Button>
+              )}
+            </div>
           </div>
           <div className="mt-4">
             <div className="relative max-w-md">
@@ -1384,12 +1808,11 @@ function OrdersTab({ currentUser, openCreateForm: initialOpenForm = false, onFor
                     <TableHead>Customer</TableHead>
                     <TableHead>Date</TableHead>
                     <TableHead>Departure Date</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Status</TableHead>
+                <TableHead>Status</TableHead>
                     <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
                   {orders.map((order) => {
                     const orderId = order.id || order._id;
                     const orderDate = order.createdAt ? new Date(order.createdAt) : (order.date ? new Date(order.date) : new Date());
@@ -1397,14 +1820,13 @@ function OrdersTab({ currentUser, openCreateForm: initialOpenForm = false, onFor
                     const customerName = order.customerId?.firstName && order.customerId?.lastName 
                       ? `${order.customerId.firstName} ${order.customerId.lastName}`
                       : order.customer || 'N/A';
-                    const amount = order.totalAmount || order.amount || 0;
 
                     return (
                       <TableRow key={orderId}>
                         <TableCell className="font-medium">{order.orderNumber || orderId}</TableCell>
                         <TableCell>{customerName}</TableCell>
                         <TableCell>{orderDate.toLocaleDateString()}</TableCell>
-                        <TableCell>
+                  <TableCell>
                           {departureDate ? (
                             <div className="flex items-center gap-1">
                               <Calendar className="w-3 h-3 text-muted-foreground" />
@@ -1413,12 +1835,31 @@ function OrdersTab({ currentUser, openCreateForm: initialOpenForm = false, onFor
                           ) : (
                             <span className="text-muted-foreground">N/A</span>
                           )}
-                        </TableCell>
-                        <TableCell>${typeof amount === 'number' ? amount.toFixed(2) : '0.00'}</TableCell>
+                  </TableCell>
                         <TableCell>
-                          <Badge variant={order.status === 'completed' || order.status === 'Completed' ? "default" : "secondary"}>
-                            {order.status || 'pending'}
-                          </Badge>
+                          {hasPermission(currentUser, Permissions.ORDER_MODIFY) ? (
+                            <Select
+                              value={order.status || 'pending'}
+                              onValueChange={(newStatus) => handleOrderStatusChange(orderId, newStatus)}
+                            >
+                              <SelectTrigger className="w-[140px]">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="pending">Pending</SelectItem>
+                                <SelectItem value="processing">Processing</SelectItem>
+                                <SelectItem value="confirmed">Confirmed</SelectItem>
+                                <SelectItem value="in_transit">In Transit</SelectItem>
+                                <SelectItem value="delivered">Delivered</SelectItem>
+                                <SelectItem value="completed">Completed</SelectItem>
+                                <SelectItem value="cancelled">Cancelled</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <Badge variant={order.status === 'completed' || order.status === 'Completed' ? "default" : "secondary"}>
+                              {order.status || 'pending'}
+                            </Badge>
+                          )}
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-2">
@@ -1427,7 +1868,7 @@ function OrdersTab({ currentUser, openCreateForm: initialOpenForm = false, onFor
                                 <DialogTrigger asChild>
                                   <Button variant="ghost" size="icon" onClick={() => setEditingOrder(order)}>
                                     <Edit className="w-4 h-4" />
-                                  </Button>
+                    </Button>
                                 </DialogTrigger>
                                 <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                                   <DialogHeader>
@@ -1451,12 +1892,12 @@ function OrdersTab({ currentUser, openCreateForm: initialOpenForm = false, onFor
                               </Button>
                             )}
                           </div>
-                        </TableCell>
-                      </TableRow>
+                  </TableCell>
+                </TableRow>
                     );
                   })}
-                </TableBody>
-              </Table>
+            </TableBody>
+          </Table>
               
               {/* Pagination */}
               {totalPages > 1 && (
@@ -1504,6 +1945,7 @@ function ShipmentsTab({ currentUser }: { currentUser: any }) {
   const [showBulkUpdate, setShowBulkUpdate] = useState(false);
   const [showIndividualUpdate, setShowIndividualUpdate] = useState(false);
   const [updatingShipment, setUpdatingShipment] = useState<any>(null);
+  const [expandedShipments, setExpandedShipments] = useState<Set<string>>(new Set());
 
   // Fetch shipments from backend
   useEffect(() => {
@@ -1538,15 +1980,33 @@ function ShipmentsTab({ currentUser }: { currentUser: any }) {
           throw new Error(result.error?.message || 'Failed to fetch shipments');
         }
 
-        // Handle paginated response
-        if (result.data?.items) {
-          setShipments(result.data.items);
-          setTotalPages(result.data.pagination?.totalPages || 1);
-        } else if (Array.isArray(result.data)) {
-          // Handle non-paginated response
-          setShipments(result.data);
+        // Handle different response structures from Shipment Collection
+        let shipmentsData = [];
+        
+        if (result.data) {
+          if (Array.isArray(result.data)) {
+            shipmentsData = result.data;
+          } else if (result.data.items && Array.isArray(result.data.items)) {
+            // Paginated response: data.items
+            shipmentsData = result.data.items;
+          } else if (result.data.shipments && Array.isArray(result.data.shipments)) {
+            // Response: data.shipments
+            shipmentsData = result.data.shipments;
+          }
+        }
+        
+        // Ensure we have an array
+        if (!Array.isArray(shipmentsData)) {
+          shipmentsData = [];
+        }
+        
+        setShipments(shipmentsData);
+        
+        // Update pagination if available
+        if (result.data?.pagination) {
+          setTotalPages(result.data.pagination.totalPages || 1);
         } else {
-          setShipments([]);
+          setTotalPages(1);
         }
       } catch (err: any) {
         console.error('Error fetching shipments:', err);
@@ -1630,14 +2090,52 @@ function ShipmentsTab({ currentUser }: { currentUser: any }) {
         throw new Error(result.error?.message || 'Failed to update shipment');
       }
 
-      // Refresh shipments list
-      setShipments(shipments.map(s => 
-        (s.id || s._id) === shipmentId 
-          ? { ...s, currentStatus: data.status } 
-          : s
-      ));
+      // Refetch shipments from backend to get updated data from Shipment Collection
+      try {
+        const fetchResponse = await apiRequest(`/shipments?page=${page}&limit=10${searchQuery ? `&search=${searchQuery}` : ''}`, {
+          method: 'GET',
+        });
+        
+        if (fetchResponse.ok) {
+          const fetchResult = await fetchResponse.json();
+          let shipmentsData = [];
+          
+          if (fetchResult.data) {
+            if (Array.isArray(fetchResult.data)) {
+              shipmentsData = fetchResult.data;
+            } else if (fetchResult.data.items && Array.isArray(fetchResult.data.items)) {
+              shipmentsData = fetchResult.data.items;
+            } else if (fetchResult.data.shipments && Array.isArray(fetchResult.data.shipments)) {
+              shipmentsData = fetchResult.data.shipments;
+            }
+          }
+          
+          if (Array.isArray(shipmentsData)) {
+            setShipments(shipmentsData);
+          }
+          
+          if (fetchResult.data?.pagination) {
+            setTotalPages(fetchResult.data.pagination.totalPages || 1);
+          }
+        }
+      } catch (fetchErr) {
+        console.error('Error refetching shipments after update:', fetchErr);
+        // Fallback: update local state
+        setShipments(shipments.map(s => 
+          (s.id || s._id) === shipmentId 
+            ? { ...s, currentStatus: data.status, status: data.status } 
+            : s
+        ));
+      }
+      
       setUpdatingShipment(null);
       setShowIndividualUpdate(false);
+      
+      toast({
+        title: "Success",
+        description: `Shipment status updated to ${data.status}. All orders in this shipment have been updated.`,
+        variant: "default",
+      });
     } catch (err: any) {
       console.error('Error updating shipment:', err);
       toast({
@@ -1646,6 +2144,105 @@ function ShipmentsTab({ currentUser }: { currentUser: any }) {
         variant: "destructive",
       });
     }
+  };
+
+  const handleShipmentStatusChange = async (shipmentId: string | number, newStatus: string) => {
+    if (!hasPermission(currentUser, Permissions.SHIPMENT_STATUS_UPDATE)) {
+      toast({
+        title: "Permission Denied",
+        description: "You do not have permission to update shipment status",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const response = await apiRequest(`/shipments/${shipmentId}/status`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          status: newStatus,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error?.message || errorData.message || `HTTP error! status: ${response.status}`;
+        throw new Error(errorMessage);
+      }
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error?.message || 'Failed to update shipment status');
+      }
+
+      // Refetch shipments from backend to get updated data from Shipment Collection
+      try {
+        const fetchResponse = await apiRequest(`/shipments?page=${page}&limit=10${searchQuery ? `&search=${searchQuery}` : ''}`, {
+          method: 'GET',
+        });
+        
+        if (fetchResponse.ok) {
+          const fetchResult = await fetchResponse.json();
+          let shipmentsData = [];
+          
+          if (fetchResult.data) {
+            if (Array.isArray(fetchResult.data)) {
+              shipmentsData = fetchResult.data;
+            } else if (fetchResult.data.items && Array.isArray(fetchResult.data.items)) {
+              shipmentsData = fetchResult.data.items;
+            } else if (fetchResult.data.shipments && Array.isArray(fetchResult.data.shipments)) {
+              shipmentsData = fetchResult.data.shipments;
+            }
+          }
+          
+          if (Array.isArray(shipmentsData)) {
+            setShipments(shipmentsData);
+          }
+          
+          if (fetchResult.data?.pagination) {
+            setTotalPages(fetchResult.data.pagination.totalPages || 1);
+          }
+        }
+      } catch (fetchErr) {
+        console.error('Error refetching shipments after status update:', fetchErr);
+        // Fallback: update local state
+        setShipments(prevShipments => 
+          prevShipments.map(s => {
+            const sId = s.id || s._id;
+            if (sId === shipmentId) {
+              return { ...s, status: newStatus, currentStatus: newStatus };
+            }
+            return s;
+          })
+        );
+      }
+
+      toast({
+        title: "Success",
+        description: `Shipment status updated to ${newStatus}. All orders in this shipment have been updated automatically.`,
+        variant: "default",
+      });
+    } catch (err: any) {
+      console.error('Error updating shipment status:', err);
+      toast({
+        title: "Error",
+        description: "Failed to update shipment status: " + err.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const toggleShipmentExpansion = (shipmentId: string) => {
+    setExpandedShipments(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(shipmentId)) {
+        newSet.delete(shipmentId);
+      } else {
+        newSet.add(shipmentId);
+      }
+      return newSet;
+    });
   };
 
   const toggleSelection = (trackingId: string) => {
@@ -1761,54 +2358,100 @@ function ShipmentsTab({ currentUser }: { currentUser: any }) {
                         />
                       </TableHead>
                     )}
-                    <TableHead>Tracking ID</TableHead>
-                    <TableHead>Shipper</TableHead>
-                    <TableHead>Receiver</TableHead>
+                    <TableHead>Batch/Shipment ID</TableHead>
+                    <TableHead>Departure Date</TableHead>
+                    <TableHead>Orders Count</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Date</TableHead>
+                    <TableHead>Created Date</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {shipments.map((shipment) => {
                     const shipmentId = shipment.id || shipment._id;
-                    const trackingId = shipment.trackingId || shipmentId;
+                    // Get batchNumber from Shipment Collection
+                    const batchNumber = shipment.batchNumber || shipment.trackingId || shipment.id || `BATCH-${shipmentId}`;
+                    // Get dates from Shipment Collection
                     const shipmentDate = shipment.createdAt ? new Date(shipment.createdAt) : (shipment.date ? new Date(shipment.date) : new Date());
-                    const shipperName = shipment.shipperId?.firstName && shipment.shipperId?.lastName
-                      ? `${shipment.shipperId.firstName} ${shipment.shipperId.lastName}`
-                      : shipment.shipper?.firstName && shipment.shipper?.lastName
-                      ? `${shipment.shipper.firstName} ${shipment.shipper.lastName}`
-                      : shipment.shipper || 'N/A';
-                    const receiverName = shipment.receiverId?.firstName && shipment.receiverId?.lastName
-                      ? `${shipment.receiverId.firstName} ${shipment.receiverId.lastName}`
-                      : shipment.receiver?.firstName && shipment.receiver?.lastName
-                      ? `${shipment.receiver.firstName} ${shipment.receiver.lastName}`
-                      : shipment.receiver || 'N/A';
-                    const status = shipment.currentStatus || shipment.status || 'Processing';
+                    const departureDate = shipment.departureDate ? new Date(shipment.departureDate) : null;
+                    // Get status from Shipment Collection (support both currentStatus and status fields)
+                    const status = shipment.currentStatus || shipment.status || 'pending';
+                    // Get orders from Shipment Collection - can be populated orders array or orderIds array
+                    const orders = shipment.orders || shipment.orderIds || [];
+                    const ordersCount = Array.isArray(orders) ? orders.length : (shipment.orderIds ? shipment.orderIds.length : 0);
+                    const isExpanded = expandedShipments.has(shipmentId);
 
                     return (
-                      <TableRow key={shipmentId}>
-                        {hasPermission(currentUser, Permissions.SHIPMENT_BULK_UPDATE) && (
-                          <TableCell>
-                            <Checkbox
-                              checked={selectedShipments.includes(trackingId)}
-                              onCheckedChange={() => toggleSelection(trackingId)}
-                            />
+                      <>
+                        <TableRow key={shipmentId}>
+                          {hasPermission(currentUser, Permissions.SHIPMENT_BULK_UPDATE) && (
+                            <TableCell>
+                              <Checkbox
+                                checked={selectedShipments.includes(shipmentId)}
+                                onCheckedChange={() => toggleSelection(shipmentId)}
+                              />
+                            </TableCell>
+                          )}
+                          <TableCell className="font-medium">
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6"
+                                onClick={() => toggleShipmentExpansion(shipmentId)}
+                              >
+                                {isExpanded ? (
+                                  <ChevronDown className="h-4 w-4" />
+                                ) : (
+                                  <ChevronRight className="h-4 w-4" />
+                                )}
+                              </Button>
+                              {batchNumber}
+                            </div>
                           </TableCell>
-                        )}
-                        <TableCell className="font-medium">{trackingId}</TableCell>
-                        <TableCell>{shipperName}</TableCell>
-                        <TableCell>{receiverName}</TableCell>
-                        <TableCell>
-                          <Badge variant={
-                            status === 'Delivered' ? 'default' : 
-                            status === 'In Transit' ? 'secondary' : 
-                            'outline'
-                          }>
-                            {status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{shipmentDate.toLocaleDateString()}</TableCell>
+                          <TableCell>
+                            {departureDate ? (
+                              <div className="flex items-center gap-1">
+                                <Calendar className="w-3 h-3 text-muted-foreground" />
+                                {departureDate.toLocaleDateString()}
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground">N/A</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{ordersCount} orders</Badge>
+                          </TableCell>
+                          <TableCell>
+                            {hasPermission(currentUser, Permissions.SHIPMENT_STATUS_UPDATE) ? (
+                              <Select
+                                value={status}
+                                onValueChange={(newStatus) => handleShipmentStatusChange(shipmentId, newStatus)}
+                              >
+                                <SelectTrigger className="w-[140px]">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="pending">Pending</SelectItem>
+                                  <SelectItem value="processing">Processing</SelectItem>
+                                  <SelectItem value="confirmed">Confirmed</SelectItem>
+                                  <SelectItem value="in_transit">In Transit</SelectItem>
+                                  <SelectItem value="delivered">Delivered</SelectItem>
+                                  <SelectItem value="completed">Completed</SelectItem>
+                                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            ) : (
+                              <Badge variant={
+                                status === 'delivered' || status === 'completed' ? 'default' : 
+                                status === 'in_transit' ? 'secondary' : 
+                                'outline'
+                              }>
+                                {status}
+                              </Badge>
+                            )}
+                          </TableCell>
+                          <TableCell>{shipmentDate.toLocaleDateString()}</TableCell>
                         <TableCell>
                           <div className="flex gap-2">
                             {hasPermission(currentUser, Permissions.SHIPMENT_STATUS_UPDATE) && (
@@ -1838,7 +2481,7 @@ function ShipmentsTab({ currentUser }: { currentUser: any }) {
                                     <DialogTitle>Update Shipment Status</DialogTitle>
                                   </DialogHeader>
                                   <StatusUpdateForm
-                                    shipmentIds={[trackingId]}
+                                    shipmentIds={[shipmentId]}
                                     isBulk={false}
                                     onSave={handleIndividualUpdate}
                                     onCancel={() => {
@@ -1852,7 +2495,7 @@ function ShipmentsTab({ currentUser }: { currentUser: any }) {
                             <Button 
                               variant="ghost" 
                               size="icon"
-                              onClick={() => window.open(`/track/${trackingId}`, '_blank')}
+                              onClick={() => window.open(`/track/${batchNumber}`, '_blank')}
                               title="View Details"
                             >
                               <ArrowRight className="w-4 h-4" />
@@ -1860,6 +2503,43 @@ function ShipmentsTab({ currentUser }: { currentUser: any }) {
                           </div>
                         </TableCell>
                       </TableRow>
+                      {isExpanded && ordersCount > 0 && (
+                        <TableRow>
+                          <TableCell colSpan={hasPermission(currentUser, Permissions.SHIPMENT_BULK_UPDATE) ? 7 : 6} className="bg-muted/50">
+                            <div className="py-4">
+                              <h4 className="font-semibold mb-3">Orders in this Shipment ({ordersCount}):</h4>
+                              <div className="space-y-2">
+                                {Array.isArray(orders) && orders.length > 0 ? (
+                                  orders.map((order: any, idx: number) => {
+                                    // Handle both populated order objects from Shipment Collection and order IDs
+                                    const orderId = order.id || order._id || order;
+                                    const orderNumber = order.orderNumber || order.orderId?.orderNumber || orderId;
+                                    const customerName = order.customerId?.firstName && order.customerId?.lastName
+                                      ? `${order.customerId.firstName} ${order.customerId.lastName}`
+                                      : order.customer || order.customerId?.email || 'N/A';
+                                    const orderStatus = order.status || order.orderId?.status || 'pending';
+                                    
+                                    return (
+                                      <div key={idx} className="flex items-center justify-between p-2 border rounded">
+                                        <div className="flex items-center gap-4">
+                                          <span className="font-medium">{orderNumber}</span>
+                                          <span className="text-sm text-muted-foreground">{customerName}</span>
+                                          <Badge variant={orderStatus === 'completed' ? 'default' : 'secondary'}>
+                                            {orderStatus}
+                                          </Badge>
+                                        </div>
+                                      </div>
+                                    );
+                                  })
+                                ) : (
+                                  <p className="text-sm text-muted-foreground">No orders found in this shipment</p>
+                                )}
+                              </div>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </>
                     );
                   })}
                 </TableBody>
@@ -1939,10 +2619,10 @@ function BranchManagementTab() {
         if (result.data) {
           if (Array.isArray(result.data)) {
             branchesData = result.data;
+          } else if (result.data.branches && Array.isArray(result.data.branches)) {
+            branchesData = result.data.branches;
           } else if (result.data.items && Array.isArray(result.data.items)) {
             branchesData = result.data.items;
-          } else if (Array.isArray(result.data)) {
-            branchesData = result.data;
           }
         }
         
@@ -1951,12 +2631,14 @@ function BranchManagementTab() {
           branchesData = [];
         }
         
-        // Filter by search query if provided
+        // If search query is provided, filter on frontend (or backend should handle it)
+        // For now, backend should handle search, but we can also filter here as fallback
         const filtered = searchQuery
           ? branchesData.filter((branch: any) => 
               branch.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
               branch.address?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-              branch.city?.toLowerCase().includes(searchQuery.toLowerCase())
+              branch.city?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              branch.country?.toLowerCase().includes(searchQuery.toLowerCase())
             )
           : branchesData;
 
@@ -1985,16 +2667,77 @@ function BranchManagementTab() {
     if (!branchToDelete) return;
 
     try {
-      const response = await apiRequest(`/branches/${branchToDelete}`, {
+      // Log the API URL and endpoint for debugging
+      const apiUrl = getApiUrl();
+      const endpoint = `/branches/${branchToDelete}`;
+      const fullUrl = `${apiUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+      console.log('Deleting branch:', {
+        branchId: branchToDelete,
+        endpoint,
+        fullUrl,
+        apiUrl
+      });
+
+      const response = await apiRequest(endpoint, {
         method: 'DELETE',
       });
 
+      console.log('Delete response:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      });
+
       if (!response.ok) {
-        throw new Error('Failed to delete branch');
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error?.message || errorData.message || `HTTP error! status: ${response.status}`;
+        console.error('Delete failed:', errorMessage, errorData);
+        throw new Error(errorMessage);
       }
 
-      // Remove branch from the list
-      setBranches(prevBranches => prevBranches.filter(b => (b.id || b._id) !== branchToDelete));
+      const result = await response.json();
+      
+      // Verify deletion was successful
+      if (result.success === false) {
+        throw new Error(result.error?.message || 'Failed to delete branch');
+      }
+
+      // Refetch branches from backend to ensure we have the latest data
+      try {
+        const params = new URLSearchParams();
+        if (searchQuery) {
+          params.append('search', searchQuery);
+        }
+
+        const fetchResponse = await apiRequest(`/branches${params.toString() ? `?${params.toString()}` : ''}`, {
+          method: 'GET',
+        });
+
+        if (fetchResponse.ok) {
+          const fetchResult = await fetchResponse.json();
+          let branchesData = [];
+          
+          if (fetchResult.data) {
+            if (Array.isArray(fetchResult.data)) {
+              branchesData = fetchResult.data;
+            } else if (fetchResult.data.branches && Array.isArray(fetchResult.data.branches)) {
+              branchesData = fetchResult.data.branches;
+            } else if (fetchResult.data.items && Array.isArray(fetchResult.data.items)) {
+              branchesData = fetchResult.data.items;
+            }
+          }
+          
+          if (!Array.isArray(branchesData)) {
+            branchesData = [];
+          }
+          
+          setBranches(branchesData);
+        }
+      } catch (fetchErr) {
+        console.error('Error refetching branches after deletion:', fetchErr);
+        // Fallback: remove from local state
+        setBranches(prevBranches => prevBranches.filter(b => (b.id || b._id) !== branchToDelete));
+      }
       
       toast({
         title: "Success",
@@ -2015,13 +2758,18 @@ function BranchManagementTab() {
 
   const handleCreateBranch = async (data: any) => {
     try {
+      // Remove status field if it exists (we don't use status anymore)
+      const { status, ...branchData } = data;
+      
       const response = await apiRequest('/branches', {
         method: 'POST',
-        body: JSON.stringify(data),
+        body: JSON.stringify(branchData),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create branch');
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error?.message || errorData.message || `HTTP error! status: ${response.status}`;
+        throw new Error(errorMessage);
       }
 
       const result = await response.json();
@@ -2030,8 +2778,51 @@ function BranchManagementTab() {
         throw new Error(result.error?.message || 'Failed to create branch');
       }
 
-      // Refresh branches list
-      setBranches([...branches, result.data]);
+      // Refetch branches from backend to ensure we have the latest data
+      try {
+        const params = new URLSearchParams();
+        if (searchQuery) {
+          params.append('search', searchQuery);
+        }
+
+        const fetchResponse = await apiRequest(`/branches${params.toString() ? `?${params.toString()}` : ''}`, {
+          method: 'GET',
+        });
+
+        if (fetchResponse.ok) {
+          const fetchResult = await fetchResponse.json();
+          let branchesData = [];
+          
+          if (fetchResult.data) {
+            if (Array.isArray(fetchResult.data)) {
+              branchesData = fetchResult.data;
+            } else if (fetchResult.data.branches && Array.isArray(fetchResult.data.branches)) {
+              branchesData = fetchResult.data.branches;
+            } else if (fetchResult.data.items && Array.isArray(fetchResult.data.items)) {
+              branchesData = fetchResult.data.items;
+            }
+          }
+          
+          if (!Array.isArray(branchesData)) {
+            branchesData = [];
+          }
+          
+          setBranches(branchesData);
+        }
+      } catch (fetchErr) {
+        console.error('Error refetching branches after creation:', fetchErr);
+        // Fallback: add to local state
+        const newBranch = result.data || result;
+        if (newBranch && (newBranch._id || newBranch.id)) {
+          setBranches([...branches, newBranch]);
+        }
+      }
+      
+      toast({
+        title: "Success",
+        description: "Branch created successfully!",
+        variant: "default",
+      });
       setShowCreateForm(false);
     } catch (err: any) {
       console.error('Error creating branch:', err);
@@ -2045,14 +2836,19 @@ function BranchManagementTab() {
 
   const handleUpdateBranch = async (data: any) => {
     try {
+      // Remove status field if it exists (we don't use status anymore)
+      const { status, ...branchData } = data;
+      
       const branchId = editingBranch.id || editingBranch._id;
       const response = await apiRequest(`/branches/${branchId}`, {
         method: 'PUT',
-        body: JSON.stringify(data),
+        body: JSON.stringify(branchData),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update branch');
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error?.message || errorData.message || `HTTP error! status: ${response.status}`;
+        throw new Error(errorMessage);
       }
 
       const result = await response.json();
@@ -2061,8 +2857,48 @@ function BranchManagementTab() {
         throw new Error(result.error?.message || 'Failed to update branch');
       }
 
-      // Refresh branches list
-      setBranches(branches.map(b => (b.id || b._id) === branchId ? result.data : b));
+      // Refetch branches from backend to ensure we have the latest data
+      try {
+        const params = new URLSearchParams();
+        if (searchQuery) {
+          params.append('search', searchQuery);
+        }
+
+        const fetchResponse = await apiRequest(`/branches${params.toString() ? `?${params.toString()}` : ''}`, {
+          method: 'GET',
+        });
+
+        if (fetchResponse.ok) {
+          const fetchResult = await fetchResponse.json();
+          let branchesData = [];
+          
+          if (fetchResult.data) {
+            if (Array.isArray(fetchResult.data)) {
+              branchesData = fetchResult.data;
+            } else if (fetchResult.data.branches && Array.isArray(fetchResult.data.branches)) {
+              branchesData = fetchResult.data.branches;
+            } else if (fetchResult.data.items && Array.isArray(fetchResult.data.items)) {
+              branchesData = fetchResult.data.items;
+            }
+          }
+          
+          if (!Array.isArray(branchesData)) {
+            branchesData = [];
+          }
+          
+          setBranches(branchesData);
+        }
+      } catch (fetchErr) {
+        console.error('Error refetching branches after update:', fetchErr);
+        // Fallback: update local state
+        setBranches(branches.map(b => (b.id || b._id) === branchId ? result.data : b));
+      }
+      
+      toast({
+        title: "Success",
+        description: "Branch updated successfully!",
+        variant: "default",
+      });
       setEditingBranch(null);
     } catch (err: any) {
       console.error('Error updating branch:', err);
@@ -2178,12 +3014,7 @@ function BranchManagementTab() {
                 return (
                   <Card key={branchId} className="border-2 border-primary/10">
                     <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-lg">{branch.name || 'Unnamed Branch'}</CardTitle>
-                        <Badge variant={branch.status === 'active' ? 'default' : 'secondary'}>
-                          {branch.status || 'active'}
-                        </Badge>
-                      </div>
+                      <CardTitle className="text-lg">{branch.name || 'Unnamed Branch'}</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-2">
@@ -2262,7 +3093,6 @@ function BranchForm({ branch, onSave, onCancel }: { branch?: any; onSave: (data:
     country: branch?.country || '',
     phone: branch?.phone || '',
     email: branch?.email || '',
-    status: branch?.status || 'active',
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -2325,18 +3155,6 @@ function BranchForm({ branch, onSave, onCancel }: { branch?: any; onSave: (data:
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
           />
         </div>
-      </div>
-      <div>
-        <Label htmlFor="status">Status</Label>
-        <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="inactive">Inactive</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
       <div className="flex justify-end gap-2 pt-4">
         <Button type="button" variant="outline" onClick={onCancel}>
@@ -2654,16 +3472,81 @@ function UserManagementTab({ currentUser }: { currentUser: any }) {
     if (!userToDelete) return;
 
     try {
-      const response = await apiRequest(`/users/${userToDelete}`, {
+      // Log the API URL and endpoint for debugging
+      const apiUrl = getApiUrl();
+      const endpoint = `/users/${userToDelete}`;
+      const fullUrl = `${apiUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+      console.log('Deleting user:', {
+        userId: userToDelete,
+        endpoint,
+        fullUrl,
+        apiUrl
+      });
+
+      const response = await apiRequest(endpoint, {
         method: 'DELETE',
       });
 
+      console.log('Delete response:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      });
+
       if (!response.ok) {
-        throw new Error('Failed to delete user');
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error?.message || errorData.message || `HTTP error! status: ${response.status}`;
+        console.error('Delete failed:', errorMessage, errorData);
+        throw new Error(errorMessage);
       }
 
-      // Remove the user from the list without refreshing the entire page
-      setUsers(prevUsers => prevUsers.filter(u => (u.id || u._id) !== userToDelete));
+      const result = await response.json();
+      
+      // Verify deletion was successful
+      if (result.success === false) {
+        throw new Error(result.error?.message || 'Failed to delete user');
+      }
+
+      // Refetch users from backend to ensure we have the latest data
+      try {
+        const params = new URLSearchParams();
+        if (searchQuery) {
+          params.append('search', searchQuery);
+        }
+
+        const fetchResponse = await apiRequest(`/users${params.toString() ? `?${params.toString()}` : ''}`, {
+          method: 'GET',
+        });
+
+        if (fetchResponse.ok) {
+          const fetchResult = await fetchResponse.json();
+          let usersData = [];
+          
+          if (fetchResult.data) {
+            if (Array.isArray(fetchResult.data)) {
+              usersData = fetchResult.data;
+            } else if (fetchResult.data.users && Array.isArray(fetchResult.data.users)) {
+              usersData = fetchResult.data.users;
+            } else if (fetchResult.data.items && Array.isArray(fetchResult.data.items)) {
+              usersData = fetchResult.data.items;
+            }
+          }
+          
+          if (!Array.isArray(usersData)) {
+            usersData = [];
+          }
+          
+          setUsers(usersData);
+          
+          if (fetchResult.data?.pagination) {
+            setTotalPages(fetchResult.data.pagination.totalPages || 1);
+          }
+        }
+      } catch (fetchErr) {
+        console.error('Error refetching users after deletion:', fetchErr);
+        // Fallback: remove from local state
+        setUsers(prevUsers => prevUsers.filter(u => (u.id || u._id) !== userToDelete));
+      }
       
       toast({
         title: "Success",
@@ -2798,7 +3681,37 @@ function UserManagementTab({ currentUser }: { currentUser: any }) {
                 {users.map((user) => {
                   const userId = user.id || user._id;
                   // Backend returns role in roleId object: { _id: "...", name: "..." }
-                  const roleName = user.roleId?.name || user.role?.name || user.role || 'N/A';
+                  // Map old role names to new ones if needed
+                  let roleName = user.roleId?.name || user.role?.name || user.role || 'N/A';
+                  
+                  // Map old role names to correct role names
+                  const roleNameMap: Record<string, string> = {
+                    'Staff': 'Hub Receiver',
+                    'Manager': 'Admin',
+                    'staff': 'Hub Receiver',
+                    'manager': 'Admin',
+                    'Staff Member': 'Hub Receiver',
+                    'Manager Role': 'Admin',
+                  };
+                  
+                  // If role name is in the map, use the mapped value
+                  if (roleNameMap[roleName]) {
+                    roleName = roleNameMap[roleName];
+                  }
+                  
+                  // Ensure role name matches one of our defined roles
+                  const validRoles = ['Driver', 'Super Admin', 'Admin', 'Hub Receiver'];
+                  if (!validRoles.includes(roleName)) {
+                    // Try to find a match (case-insensitive)
+                    const matchedRole = validRoles.find(r => 
+                      r.toLowerCase() === roleName.toLowerCase() ||
+                      roleName.toLowerCase().includes(r.toLowerCase()) ||
+                      r.toLowerCase().includes(roleName.toLowerCase())
+                    );
+                    if (matchedRole) {
+                      roleName = matchedRole;
+                    }
+                  }
                   // Backend returns branch in branchId object: { _id: "...", name: "..." }
                   const branchName = user.branchId?.name || user.branch?.name || user.branch || 'N/A';
                   const status = user.status || 'active';
@@ -2879,6 +3792,492 @@ type HeroImage = {
   title?: string;
 };
 
+// Roles Management Tab Component
+function RolesManagementTab() {
+  const [roles, setRoles] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [editingRole, setEditingRole] = useState<any | null>(null);
+  const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
+  const [saving, setSaving] = useState(false);
+
+  // Permission descriptions mapping
+  const permissionDescriptions: Record<string, string> = {
+    'order:create': 'Create new orders',
+    'order:modify': 'Edit and update orders',
+    'order:delete': 'Delete orders',
+    'order:view': 'View orders',
+    'shipment:status_update': 'Update shipment status',
+    'shipment:bulk_update': 'Bulk update shipments',
+    'shipment:view': 'View shipments',
+    'user:create': 'Create new users',
+    'user:modify': 'Edit and update users',
+    'user:delete': 'Delete users',
+    'user:view': 'View users and roles',
+    'frontend:edit': 'Edit website content',
+    'frontend:reviews': 'Manage website reviews',
+    'settings:modify': 'Modify system settings',
+  };
+
+  // Permission categories
+  const permissionCategories: Record<string, { title: string; permissions: string[] }> = {
+    orders: {
+      title: 'Order Management',
+      permissions: ['order:create', 'order:modify', 'order:delete', 'order:view']
+    },
+    shipments: {
+      title: 'Shipment Management',
+      permissions: ['shipment:status_update', 'shipment:bulk_update', 'shipment:view']
+    },
+    users: {
+      title: 'User Management',
+      permissions: ['user:create', 'user:modify', 'user:delete', 'user:view']
+    },
+    frontend: {
+      title: 'Website Management',
+      permissions: ['frontend:edit', 'frontend:reviews']
+    },
+    settings: {
+      title: 'System Settings',
+      permissions: ['settings:modify']
+    }
+  };
+
+  // Fetch roles from backend
+  useEffect(() => {
+    const fetchRoles = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await apiRequest('/roles', {
+          method: 'GET',
+        });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            throw new Error('Authentication required. Please log in.');
+          }
+          throw new Error(`Failed to fetch roles: ${response.status}`);
+        }
+
+        const result = await response.json();
+
+        if (!result.success) {
+          throw new Error(result.error?.message || 'Failed to fetch roles');
+        }
+
+        // Handle different response structures
+        let rolesData = [];
+        
+        if (result.data) {
+          if (Array.isArray(result.data)) {
+            rolesData = result.data;
+          } else if (result.data.roles && Array.isArray(result.data.roles)) {
+            rolesData = result.data.roles;
+          } else if (result.data.items && Array.isArray(result.data.items)) {
+            rolesData = result.data.items;
+          }
+        }
+        
+        if (!Array.isArray(rolesData)) {
+          rolesData = [];
+        }
+        
+        // Deduplicate roles by normalized name
+        const roleNameMap: Record<string, string> = {
+          'Staff': 'Hub Receiver',
+          'Manager': 'Admin',
+          'staff': 'Hub Receiver',
+          'manager': 'Admin',
+          'Staff Member': 'Hub Receiver',
+          'Manager Role': 'Admin',
+        };
+        
+        const validRoles = ['Driver', 'Super Admin', 'Admin', 'Hub Receiver'];
+        
+        // Normalize role names and deduplicate
+        const normalizedRoles = new Map<string, any>();
+        
+        rolesData.forEach((role: any) => {
+          let roleName = role.name || role.role || 'Unknown Role';
+          
+          // Map old role names to correct role names
+          if (roleNameMap[roleName]) {
+            roleName = roleNameMap[roleName];
+          }
+          
+          // Ensure role name matches one of our defined roles
+          if (!validRoles.includes(roleName)) {
+            // Try to find a match (case-insensitive)
+            const matchedRole = validRoles.find(r => 
+              r.toLowerCase() === roleName.toLowerCase() ||
+              roleName.toLowerCase().includes(r.toLowerCase()) ||
+              r.toLowerCase().includes(roleName.toLowerCase())
+            );
+            if (matchedRole) {
+              roleName = matchedRole;
+            } else {
+              // Skip invalid roles
+              return;
+            }
+          }
+          
+          // Update role name to normalized value
+          const normalizedRole = {
+            ...role,
+            name: roleName,
+          };
+          
+          // If we already have this role, prefer the one that already has the correct name
+          if (!normalizedRoles.has(roleName)) {
+            normalizedRoles.set(roleName, normalizedRole);
+          } else {
+            // If current role already has correct name, prefer it
+            const existingRole = normalizedRoles.get(roleName);
+            if (existingRole && (existingRole.name || existingRole.role) !== roleName && 
+                (role.name || role.role) === roleName) {
+              normalizedRoles.set(roleName, normalizedRole);
+            }
+          }
+        });
+        
+        // Convert map back to array
+        const uniqueRoles = Array.from(normalizedRoles.values());
+        
+        setRoles(uniqueRoles);
+      } catch (err: any) {
+        console.error('Error fetching roles:', err);
+        setError(err.message || 'Failed to load roles');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRoles();
+  }, []);
+
+  // Get permissions for a role
+  const getRolePermissions = (role: any): string[] => {
+    // If role has permissions array, use it
+    if (role.permissions && Array.isArray(role.permissions)) {
+      return role.permissions;
+    }
+    
+    // If role has permissionIds array, use it
+    if (role.permissionIds && Array.isArray(role.permissionIds)) {
+      return role.permissionIds.map((p: any) => p.permission || p);
+    }
+    
+    // Fallback: use role name to get permissions from RolePermissions
+    const roleName = role.name || role.role || role._id || role.id;
+    if (RolePermissions[roleName as UserRole]) {
+      return RolePermissions[roleName as UserRole];
+    }
+    
+    return [];
+  };
+
+  // Group permissions by category
+  const groupPermissionsByCategory = (permissions: string[]) => {
+    const grouped: Record<string, string[]> = {};
+    
+    Object.keys(permissionCategories).forEach(category => {
+      const categoryPerms = permissionCategories[category].permissions.filter(p => permissions.includes(p));
+      if (categoryPerms.length > 0) {
+        grouped[category] = categoryPerms;
+      }
+    });
+    
+    return grouped;
+  };
+
+  // Get all available permissions
+  const getAllPermissions = (): string[] => {
+    return Object.values(permissionCategories).flatMap(cat => cat.permissions);
+  };
+
+  // Handle role click to edit permissions
+  const handleRoleClick = (role: any) => {
+    const permissions = getRolePermissions(role);
+    setEditingRole(role);
+    setSelectedPermissions([...permissions]);
+  };
+
+  // Toggle permission selection
+  const togglePermission = (permission: string) => {
+    setSelectedPermissions(prev => {
+      if (prev.includes(permission)) {
+        return prev.filter(p => p !== permission);
+      } else {
+        return [...prev, permission];
+      }
+    });
+  };
+
+  // Save role permissions
+  const handleSavePermissions = async () => {
+    if (!editingRole) return;
+
+    try {
+      setSaving(true);
+      const roleId = editingRole.id || editingRole._id;
+
+      const response = await apiRequest(`/roles/${roleId}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          permissions: selectedPermissions,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error?.message || 'Failed to update role permissions');
+      }
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error?.message || 'Failed to update role permissions');
+      }
+
+      // Update the role in the local state
+      setRoles(prevRoles => 
+        prevRoles.map(role => {
+          const rId = role.id || role._id;
+          if (rId === roleId) {
+            return {
+              ...role,
+              permissions: selectedPermissions,
+            };
+          }
+          return role;
+        })
+      );
+
+      setEditingRole(null);
+      toast({
+        title: "Success",
+        description: "Role permissions updated successfully!",
+        variant: "default",
+      });
+    } catch (err: any) {
+      console.error('Error updating role permissions:', err);
+      toast({
+        title: "Error",
+        description: err.message || "Failed to update role permissions",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <Card className="border-2 border-primary/20 shadow-xl">
+        <CardHeader>
+          <div>
+            <CardTitle className="text-2xl">Roles & Permissions</CardTitle>
+            <CardDescription>View what each role can do in the system</CardDescription>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                <p className="text-muted-foreground">Loading roles...</p>
+              </div>
+            </div>
+          ) : error ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-4" />
+                <p className="text-red-600 font-semibold mb-2">Error loading roles</p>
+                <p className="text-sm text-muted-foreground">{error}</p>
+                <Button 
+                  variant="outline" 
+                  className="mt-4"
+                  onClick={() => window.location.reload()}
+                >
+                  Retry
+                </Button>
+              </div>
+            </div>
+          ) : roles.length === 0 ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <Shield className="h-8 w-8 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">No roles found</p>
+              </div>
+            </div>
+          ) : (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {roles.map((role) => {
+                const roleId = role.id || role._id;
+                let roleName = role.name || role.role || 'Unknown Role';
+                
+                // Map old role names to correct role names
+                const roleNameMap: Record<string, string> = {
+                  'Staff': 'Hub Receiver',
+                  'Manager': 'Admin',
+                  'staff': 'Hub Receiver',
+                  'manager': 'Admin',
+                  'Staff Member': 'Hub Receiver',
+                  'Manager Role': 'Admin',
+                };
+                
+                // If role name is in the map, use the mapped value
+                if (roleNameMap[roleName]) {
+                  roleName = roleNameMap[roleName];
+                }
+                
+                // Ensure role name matches one of our defined roles
+                const validRoles = ['Driver', 'Super Admin', 'Admin', 'Hub Receiver'];
+                if (!validRoles.includes(roleName)) {
+                  // Try to find a match (case-insensitive)
+                  const matchedRole = validRoles.find(r => 
+                    r.toLowerCase() === roleName.toLowerCase() ||
+                    roleName.toLowerCase().includes(r.toLowerCase()) ||
+                    r.toLowerCase().includes(roleName.toLowerCase())
+                  );
+                  if (matchedRole) {
+                    roleName = matchedRole;
+                  }
+                }
+                
+                const roleDescription = role.description || role.desc || '';
+                const permissions = getRolePermissions(role);
+                const groupedPermissions = groupPermissionsByCategory(permissions);
+
+                return (
+                  <Card 
+                    key={roleId} 
+                    className="border-2 border-primary/10 cursor-pointer hover:border-primary/30 transition-colors"
+                    onClick={() => handleRoleClick(role)}
+                  >
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg">{roleName}</CardTitle>
+                      </div>
+                      {roleDescription && (
+                        <CardDescription className="mt-2">{roleDescription}</CardDescription>
+                      )}
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {Object.keys(groupedPermissions).length > 0 ? (
+                          Object.keys(groupedPermissions).map((category) => (
+                            <div key={category}>
+                              <h4 className="font-semibold text-sm mb-2 text-primary">
+                                {permissionCategories[category].title}
+                              </h4>
+                              <ul className="space-y-1">
+                                {groupedPermissions[category].map((permission) => (
+                                  <li key={permission} className="flex items-start gap-2 text-sm">
+                                    <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                                    <span className="text-muted-foreground">
+                                      {permissionDescriptions[permission] || permission}
+                                    </span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-sm text-muted-foreground">No permissions assigned</p>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Edit Permissions Dialog */}
+      <Dialog open={!!editingRole} onOpenChange={(open) => !open && setEditingRole(null)}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              Edit Permissions: {editingRole ? (editingRole.name || editingRole.role || 'Unknown Role') : ''}
+            </DialogTitle>
+            <DialogDescription>
+              Select or deselect permissions for this role. Changes will be saved to the backend.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6 py-4">
+            {Object.keys(permissionCategories).map((category) => {
+              const categoryData = permissionCategories[category];
+              return (
+                <div key={category} className="space-y-3">
+                  <h4 className="font-semibold text-base text-primary border-b pb-2">
+                    {categoryData.title}
+                  </h4>
+                  <div className="space-y-2 pl-4">
+                    {categoryData.permissions.map((permission) => {
+                      const isSelected = selectedPermissions.includes(permission);
+                      return (
+                        <div 
+                          key={permission} 
+                          className="flex items-center space-x-3 cursor-pointer hover:bg-muted/50 p-2 rounded"
+                          onClick={() => togglePermission(permission)}
+                        >
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() => togglePermission(permission)}
+                          />
+                          <Label 
+                            htmlFor={`perm-${permission}`}
+                            className="flex-1 cursor-pointer"
+                          >
+                            {permissionDescriptions[permission] || permission}
+                          </Label>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setEditingRole(null)}
+              disabled={saving}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSavePermissions}
+              disabled={saving}
+              className="bg-primary hover:bg-primary/90"
+            >
+              {saving ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4 mr-2" />
+                  Save Permissions
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
 function WebPageManagementTab() {
   const [activeSubTab, setActiveSubTab] = useState("images");
   
@@ -2896,8 +4295,9 @@ function WebPageManagementTab() {
     }
     // Default images from public folder
     return [
-      { id: 1, name: "Hero Image 1", path: "/hero-images/hero-1.jpg", title: "Global Reach, Personal Touch." },
-      { id: 2, name: "Hero Image 2", path: "/hero-images/hero-2.jpg", title: "Fast. Reliable. Secure." },
+      { id: 1, name: "Hero Image 1", path: "/hero-images/image1.jpg", title: "Global Reach, Personal Touch." },
+      { id: 2, name: "Hero Image 2", path: "/hero-images/image2.jpg", title: "Fast. Reliable. Secure." },
+      { id: 3, name: "Hero Image 3", path: "/hero-images/logistics-in-india-scaled.webp", title: "Worldwide Network." },
     ];
   };
 
