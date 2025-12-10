@@ -47,7 +47,7 @@ export function EnhancedFooter() {
           {/* Company Info */}
           <div className="lg:col-span-2">
             <Link href="/" className="inline-block mb-6">
-              <h3 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+              <h3 className="text-3xl font-bold bg-gradient-to-r from-violet-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
                 NEXT GLOBAL EXPRESS
               </h3>
             </Link>
@@ -59,7 +59,7 @@ export function EnhancedFooter() {
             {/* Contact Info */}
             <div className="space-y-4">
               <div className="flex items-start gap-3">
-                <MapPin className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
+                <MapPin className="w-5 h-5 text-violet-400 mt-1 flex-shrink-0" />
                 <div>
                   <p className="text-gray-300 text-sm">
                     Warehouse 42, Al Quoz Industrial Area 3<br />
@@ -68,14 +68,14 @@ export function EnhancedFooter() {
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <Phone className="w-5 h-5 text-primary flex-shrink-0" />
-                <a href="tel:+971501234567" className="text-gray-300 hover:text-primary transition-colors">
+                <Phone className="w-5 h-5 text-violet-400 flex-shrink-0" />
+                <a href="tel:+971501234567" className="text-gray-300 hover:text-violet-400 transition-colors">
                   +971 50 123 4567
                 </a>
               </div>
               <div className="flex items-center gap-3">
-                <Mail className="w-5 h-5 text-primary flex-shrink-0" />
-                <a href="mailto:customercare@nge.ae" className="text-gray-300 hover:text-primary transition-colors">
+                <Mail className="w-5 h-5 text-violet-400 flex-shrink-0" />
+                <a href="mailto:customercare@nge.ae" className="text-gray-300 hover:text-violet-400 transition-colors">
                   customercare@nge.ae
                 </a>
               </div>
@@ -90,7 +90,7 @@ export function EnhancedFooter() {
                 <li key={link.name}>
                   <Link 
                     href={link.href} 
-                    className="text-gray-300 hover:text-primary transition-colors inline-block"
+                    className="text-gray-300 hover:text-violet-400 transition-colors inline-block"
                   >
                     {link.name}
                   </Link>
@@ -107,7 +107,7 @@ export function EnhancedFooter() {
                 <li key={link.name}>
                   <Link 
                     href={link.href} 
-                    className="text-gray-300 hover:text-primary transition-colors inline-block"
+                    className="text-gray-300 hover:text-violet-400 transition-colors inline-block"
                   >
                     {link.name}
                   </Link>
@@ -124,7 +124,7 @@ export function EnhancedFooter() {
                 <li key={link.name}>
                   <Link 
                     href={link.href} 
-                    className="text-gray-300 hover:text-primary transition-colors inline-block"
+                    className="text-gray-300 hover:text-violet-400 transition-colors inline-block"
                   >
                     {link.name}
                   </Link>
@@ -145,7 +145,7 @@ export function EnhancedFooter() {
                     key={social.label}
                     href={social.href}
                     aria-label={social.label}
-                    className="w-10 h-10 rounded-full bg-gray-800 hover:bg-primary transition-colors flex items-center justify-center group"
+                    className="w-10 h-10 rounded-full bg-gray-800 hover:bg-gradient-violet transition-colors flex items-center justify-center group"
                   >
                     <Icon className="w-5 h-5 text-gray-300 group-hover:text-white transition-colors" />
                   </a>
@@ -154,7 +154,7 @@ export function EnhancedFooter() {
             </div>
             <div className="text-gray-400 text-sm text-center md:text-right">
               <p>&copy; {new Date().getFullYear()} Next Global Express. All rights reserved.</p>
-              <p className="mt-1">Designed with ❤️ for global logistics excellence</p>
+              <p className="mt-1">Designed with ❤️ by Bushra Technologies</p>
             </div>
           </div>
         </div>

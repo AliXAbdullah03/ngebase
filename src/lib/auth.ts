@@ -42,6 +42,9 @@ export const RolePermissions: Record<UserRole, string[]> = {
   'Driver': [
     Permissions.SHIPMENT_VIEW,
     Permissions.SHIPMENT_STATUS_UPDATE,
+    Permissions.SETTINGS_MODIFY,
+    Permissions.ORDER_VIEW,
+    Permissions.ORDER_MODIFY,
   ],
   'Hub Receiver': [
     Permissions.ORDER_CREATE,

@@ -101,11 +101,11 @@ export function HeroSlider() {
   }, [api]);
 
   return (
-    <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5">
+    <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-gradient-to-br from-violet-50 via-purple-50/30 to-pink-50/20">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-0 right-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute top-0 right-1/4 w-96 h-96 bg-violet-400/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-purple-400/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
       </div>
 
       {/* Content */}
@@ -114,7 +114,7 @@ export function HeroSlider() {
           <div className="space-y-4">
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight">
               <span className="block">Fast. Reliable. Secure.</span>
-              <span className="block bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+              <span className="block bg-gradient-to-r from-violet-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
                 Your Trusted Logistics Partner
               </span>
             </h1>
@@ -130,10 +130,10 @@ export function HeroSlider() {
               <p className="text-sm text-muted-foreground">Enter your tracking number to get real-time updates</p>
             </div>
             <div className="relative group">
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-primary via-primary/60 to-primary rounded-xl opacity-20 group-hover:opacity-30 blur transition-opacity duration-300"></div>
-              <div className="relative flex items-center gap-0 border-2 border-primary/30 rounded-xl bg-white/95 backdrop-blur-md shadow-xl hover:shadow-2xl hover:border-primary/50 transition-all duration-300 max-w-2xl overflow-hidden">
-                <div className="flex items-center px-4 py-3 bg-primary/5 border-r border-primary/10">
-                  <Search className="h-5 w-5 text-primary flex-shrink-0" />
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-violet-500 via-purple-500 to-pink-500 rounded-xl opacity-20 group-hover:opacity-30 blur transition-opacity duration-300"></div>
+              <div className="relative flex items-center gap-0 border-2 border-violet-300/30 rounded-xl bg-white/95 backdrop-blur-md shadow-xl hover:shadow-2xl hover:border-violet-500/50 transition-all duration-300 max-w-2xl overflow-hidden">
+                <div className="flex items-center px-4 py-3 bg-gradient-to-r from-violet-50 to-purple-50 border-r border-violet-200/30">
+                  <Search className="h-5 w-5 text-violet-600 flex-shrink-0" />
                 </div>
                 <div className="flex-grow">
                   <TrackingSearch />
@@ -142,7 +142,7 @@ export function HeroSlider() {
             </div>
             <p className="text-xs text-muted-foreground flex items-center gap-1">
               <span>Example:</span>
-              <code className="px-2 py-0.5 bg-primary/10 rounded text-primary font-mono text-xs">NGE123456789</code>
+              <code className="px-2 py-0.5 bg-gradient-to-r from-violet-100 to-purple-100 rounded text-violet-600 font-mono text-xs">NGE123456789</code>
             </p>
           </div>
 
@@ -159,7 +159,7 @@ export function HeroSlider() {
                 className="flex items-center gap-2 text-foreground animate-fade-in"
                 style={{ animationDelay: `${0.2 + idx * 0.1}s` }}
               >
-                <CheckCircle className="h-5 w-5 text-primary flex-shrink-0" />
+                <CheckCircle className="h-5 w-5 text-violet-600 flex-shrink-0" />
                 <span className="text-sm md:text-base">{feature}</span>
               </div>
             ))}
@@ -168,7 +168,7 @@ export function HeroSlider() {
 
         {/* Right Side - Image Slider */}
         <div className="hidden lg:block relative w-full h-[600px] animate-slide-in-right">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-primary/5 rounded-3xl blur-3xl -z-10"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-violet-400/20 to-purple-400/10 rounded-3xl blur-3xl -z-10"></div>
           <Carousel
             setApi={setApi}
             opts={{
@@ -223,8 +223,8 @@ export function HeroSlider() {
 
       {/* Scroll Indicator */}
       <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-20 animate-bounce hidden md:block">
-        <div className="w-6 h-10 border-2 border-primary/50 rounded-full flex justify-center">
-          <div className="w-1 h-3 bg-primary rounded-full mt-2 animate-pulse"></div>
+        <div className="w-6 h-10 border-2 border-violet-500/50 rounded-full flex justify-center">
+          <div className="w-1 h-3 bg-gradient-violet rounded-full mt-2 animate-pulse"></div>
         </div>
       </div>
     </section>

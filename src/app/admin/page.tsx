@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, Fragment } from 'react';
 import { useRouter } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -49,6 +49,7 @@ import {
   Clock,
   Loader2,
   Home,
+  RefreshCw,
   ChevronDown,
   ChevronRight
 } from 'lucide-react';
@@ -61,8 +62,12 @@ export default function AdminPage() {
   const router = useRouter();
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [currentUser, setCurrentUser] = useState(getCurrentUser());
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [activeTab, setActiveTab] = useState(() => {
+    const user = getCurrentUser();
+    return user?.role === 'Driver' ? 'orders' : 'dashboard';
+  });
   const [openOrderForm, setOpenOrderForm] = useState(false);
+  const [dashboardRefreshSignal, setDashboardRefreshSignal] = useState(0);
 
   // Check authentication on mount
   useEffect(() => {
@@ -81,6 +86,10 @@ export default function AdminPage() {
 
       // Token exists, allow access
       setCurrentUser(getCurrentUser());
+      const user = getCurrentUser();
+      if (user?.role === 'Driver') {
+        setActiveTab('orders');
+      }
       setIsCheckingAuth(false);
     };
 
@@ -101,24 +110,26 @@ export default function AdminPage() {
   // Show loading state while checking authentication
   if (isCheckingAuth) {
   return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-primary/5 via-background to-primary/5">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-violet-50 via-purple-50/30 to-pink-50/20">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-500 mx-auto mb-4"></div>
           <p className="text-muted-foreground">Checking authentication...</p>
         </div>
       </div>
     );
   }
 
+  const isDriver = currentUser?.role === 'Driver';
+
   return (
     <div className="flex min-h-screen flex-col">
-      <main className="flex-grow bg-gradient-to-br from-primary/5 via-background to-primary/5">
+      <main className="flex-grow bg-gradient-to-br from-violet-50 via-purple-50/30 to-pink-50/20">
         <div className="container mx-auto px-4 md:px-6 py-8">
           {/* Header */}
           <div className="mb-8">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-4xl md:text-5xl font-bold mb-2 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+                <h1 className="text-4xl md:text-5xl font-bold mb-2 bg-gradient-to-r from-violet-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
                   Admin Dashboard
                 </h1>
                 <p className="text-muted-foreground text-lg">
@@ -130,36 +141,50 @@ export default function AdminPage() {
                   {currentUser?.role || 'User'}
                 </Badge>
                 <Button 
+                  onClick={() => setDashboardRefreshSignal((value) => value + 1)}
+                  variant="outline"
+                  className="flex items-center gap-2"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  <span>Refresh</span>
+                </Button>
+                <Button 
                   onClick={handleHome}
                   variant="outline"
                   className="flex items-center gap-2"
                 >
                   <Home className="w-4 h-4" />
-                  <span>Home</span>
-        </Button>
+                  <span>Logout</span>
+                </Button>
               </div>
             </div>
           </div>
 
           {/* Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-4 lg:grid-cols-9 mb-8 h-auto">
-              <TabsTrigger value="dashboard" className="flex items-center gap-2">
-                <BarChart3 className="w-4 h-4" />
-                <span className="hidden sm:inline">Dashboard</span>
-              </TabsTrigger>
-              <TabsTrigger value="customers" className="flex items-center gap-2">
-                <Users className="w-4 h-4" />
-                <span className="hidden sm:inline">Customers</span>
-              </TabsTrigger>
+            <TabsList className="grid w-full grid-cols-3 lg:grid-cols-8 mb-8 h-auto">
+              {!isDriver && (
+                <TabsTrigger value="dashboard" className="flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4" />
+                  <span className="hidden sm:inline">Dashboard</span>
+                </TabsTrigger>
+              )}
+              {!isDriver && (
+                <TabsTrigger value="customers" className="flex items-center gap-2">
+                  <Users className="w-4 h-4" />
+                  <span className="hidden sm:inline">Customers</span>
+                </TabsTrigger>
+              )}
               <TabsTrigger value="orders" className="flex items-center gap-2">
                 <ShoppingCart className="w-4 h-4" />
                 <span className="hidden sm:inline">Orders</span>
               </TabsTrigger>
-              <TabsTrigger value="shipments" className="flex items-center gap-2">
-                <Package className="w-4 h-4" />
-                <span className="hidden sm:inline">Shipments</span>
-              </TabsTrigger>
+              {!isDriver && (
+                <TabsTrigger value="shipments" className="flex items-center gap-2">
+                  <Package className="w-4 h-4" />
+                  <span className="hidden sm:inline">Shipments</span>
+                </TabsTrigger>
+              )}
               <TabsTrigger value="branches" className="flex items-center gap-2">
                 <Building2 className="w-4 h-4" />
                 <span className="hidden sm:inline">Branches</span>
@@ -185,20 +210,25 @@ export default function AdminPage() {
             </TabsList>
 
             {/* Dashboard Tab */}
-            <TabsContent value="dashboard">
-              <DashboardTab 
-                currentUser={currentUser} 
-                onNewOrder={() => {
-                  setOpenOrderForm(true);
-                  setActiveTab("orders");
-                }}
-              />
-            </TabsContent>
+            {!isDriver && (
+              <TabsContent value="dashboard">
+                <DashboardTab 
+                  currentUser={currentUser} 
+                  refreshSignal={dashboardRefreshSignal}
+                  onNewOrder={() => {
+                    setOpenOrderForm(true);
+                    setActiveTab("orders");
+                  }}
+                />
+              </TabsContent>
+            )}
 
             {/* Customer Management Tab */}
-            <TabsContent value="customers">
-              <CustomerManagementTab />
-            </TabsContent>
+            {!isDriver && (
+              <TabsContent value="customers">
+                <CustomerManagementTab />
+              </TabsContent>
+            )}
 
             {/* Orders Tab */}
             <TabsContent value="orders">
@@ -206,9 +236,11 @@ export default function AdminPage() {
             </TabsContent>
 
             {/* Shipments Tab */}
-            <TabsContent value="shipments">
-              <ShipmentsTab currentUser={currentUser} />
-            </TabsContent>
+            {!isDriver && (
+              <TabsContent value="shipments">
+                <ShipmentsTab currentUser={currentUser} />
+              </TabsContent>
+            )}
 
             {/* Branch Management Tab */}
             <TabsContent value="branches">
@@ -243,97 +275,105 @@ export default function AdminPage() {
 }
 
 // Dashboard Tab Component
-function DashboardTab({ currentUser, onNewOrder }: { currentUser: any; onNewOrder?: () => void }) {
+function DashboardTab({ currentUser, onNewOrder, refreshSignal }: { currentUser: any; onNewOrder?: () => void; refreshSignal: number }) {
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        const apiUrl = getApiUrl();
-        const endpoint = `/dashboard/stats`;
-        console.log('Backend API URL:', apiUrl);
-        console.log('Fetching dashboard data from:', `${apiUrl}${endpoint}`);
-        
-        // Use apiRequest helper which automatically includes auth token
-        const response = await apiRequest(endpoint, {
-          method: 'GET',
-          cache: 'no-store', // Ensure fresh data
-        });
+  // Drivers should not access dashboard stats
+  if (currentUser?.role === 'Driver') {
+    return (
+      <Card className="border-2 border-violet-300/30 shadow-xl">
+        <CardContent className="p-6">
+          <div className="text-center space-y-3">
+            <AlertCircle className="w-6 h-6 text-amber-500 mx-auto" />
+            <p className="font-semibold">Dashboard not available for drivers</p>
+            <p className="text-sm text-muted-foreground">Please use the Shipments tab to manage your deliveries.</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
-        console.log('Response status:', response.status);
-        
-        if (!response.ok) {
-          // Handle 401 Unauthorized - redirect to login or show login message
-          if (response.status === 401) {
-            const errorText = await response.text();
-            console.error('Authentication error:', errorText);
-            throw new Error('UNAUTHORIZED: Authentication required. Please log in.');
-          }
-          
+  const fetchDashboardData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const apiUrl = getApiUrl();
+      const endpoint = `/dashboard/stats`;
+      console.log('Backend API URL:', apiUrl);
+      console.log('Fetching dashboard data from:', `${apiUrl}${endpoint}`);
+      
+      // Use apiRequest helper which automatically includes auth token
+      const response = await apiRequest(endpoint, {
+        method: 'GET',
+        cache: 'no-store', // Ensure fresh data
+      });
+
+      console.log('Response status:', response.status);
+      
+      if (!response.ok) {
+        // Handle 401 Unauthorized - redirect to login or show login message
+        if (response.status === 401) {
           const errorText = await response.text();
-          console.error('Response error:', errorText);
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const result = await response.json();
-        console.log('Dashboard data received:', result);
-
-        if (!result.success) {
-          throw new Error(result.error?.message || 'Failed to fetch dashboard data');
-        }
-
-        if (result.data) {
-          setDashboardData(result.data);
-          console.log('Dashboard data set successfully');
-        } else {
-          throw new Error('No data received from server');
-        }
-      } catch (err: any) {
-        console.error('Error fetching dashboard data:', err);
-        
-        // Provide more helpful error messages
-        let errorMessage = 'Failed to load dashboard data.';
-        
-        if (err.message?.includes('UNAUTHORIZED') || err.message?.includes('Authentication required') || err.message?.includes('status: 401')) {
-          errorMessage = `Authentication Required\n\nYou need to log in to access the dashboard.\n\nPlease:\n1. Log in to your account at /login\n2. Make sure your authentication token is valid\n3. Check if your session has expired`;
-        } else if (err.message?.includes('Failed to fetch') || err.message?.includes('ERR_CONNECTION_REFUSED')) {
-          const apiUrl = getApiUrl();
-          errorMessage = `Cannot connect to backend at ${apiUrl}\n\nPlease check:\n1. Is your backend server running?\n2. Is the backend URL correct in .env.local? (NEXT_PUBLIC_API_URL)\n3. Is the backend running on the correct port?`;
-        } else {
-          errorMessage = err.message || 'Failed to load dashboard data. Please check the console for details.';
+          console.error('Authentication error:', errorText);
+          throw new Error('UNAUTHORIZED: Authentication required. Please log in.');
         }
         
-        setError(errorMessage);
-      } finally {
-        setLoading(false);
+        const errorText = await response.text();
+        console.error('Response error:', errorText);
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    };
 
-    fetchDashboardData();
-    
-    // Set up real-time updates - refresh every 30 seconds
-    const intervalId = setInterval(() => {
-      fetchDashboardData();
-    }, 30000); // 30 seconds
-    
-    return () => clearInterval(intervalId);
+      const result = await response.json();
+      console.log('Dashboard data received:', result);
+
+      if (!result.success) {
+        throw new Error(result.error?.message || 'Failed to fetch dashboard data');
+      }
+
+      if (result.data) {
+        setDashboardData(result.data);
+        console.log('Dashboard data set successfully');
+      } else {
+        throw new Error('No data received from server');
+      }
+    } catch (err: any) {
+      console.error('Error fetching dashboard data:', err);
+      
+      // Provide more helpful error messages
+      let errorMessage = 'Failed to load dashboard data.';
+      
+      if (err.message?.includes('UNAUTHORIZED') || err.message?.includes('Authentication required') || err.message?.includes('status: 401')) {
+        errorMessage = `Authentication Required\n\nYou need to log in to access the dashboard.\n\nPlease:\n1. Log in to your account at /login\n2. Make sure your authentication token is valid\n3. Check if your session has expired`;
+      } else if (err.message?.includes('Failed to fetch') || err.message?.includes('ERR_CONNECTION_REFUSED')) {
+        const apiUrl = getApiUrl();
+        errorMessage = `Cannot connect to backend at ${apiUrl}\n\nPlease check:\n1. Is your backend server running?\n2. Is the backend URL correct in .env.local? (NEXT_PUBLIC_API_URL)\n3. Is the backend running on the correct port?`;
+      } else {
+        errorMessage = err.message || 'Failed to load dashboard data. Please check the console for details.';
+      }
+      
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData, refreshSignal]);
 
   const stats = dashboardData ? [
     { label: "Total Customers", value: dashboardData.totalCustomers.toLocaleString(), icon: Users, color: "text-blue-500" },
     { label: "Active Orders", value: dashboardData.activeOrders.toLocaleString(), icon: ShoppingCart, color: "text-green-500" },
     { label: "In Transit", value: dashboardData.inTransit.toLocaleString(), icon: Package, color: "text-yellow-500" },
-    { label: "Total Revenue", value: `$${dashboardData.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, icon: BarChart3, color: "text-primary" },
+    { label: "Total Revenue", value: `$${dashboardData.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, icon: BarChart3, color: "text-violet-600" },
   ] : [
     { label: "Total Customers", value: "0", icon: Users, color: "text-blue-500" },
     { label: "Active Orders", value: "0", icon: ShoppingCart, color: "text-green-500" },
     { label: "In Transit", value: "0", icon: Package, color: "text-yellow-500" },
-    { label: "Total Revenue", value: "$0.00", icon: BarChart3, color: "text-primary" },
+    { label: "Total Revenue", value: "$0.00", icon: BarChart3, color: "text-violet-600" },
   ];
 
   if (loading) {
@@ -341,7 +381,7 @@ function DashboardTab({ currentUser, onNewOrder }: { currentUser: any; onNewOrde
       <div className="space-y-6">
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           {[1, 2, 3, 4].map((i) => (
-            <Card key={i} className="border-2 border-primary/20 shadow-xl">
+            <Card key={i} className="border-2 border-violet-300/30 shadow-xl">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Loading...</CardTitle>
           </CardHeader>
@@ -357,65 +397,6 @@ function DashboardTab({ currentUser, onNewOrder }: { currentUser: any; onNewOrde
 
   const handleRetry = () => {
     setError(null);
-    setLoading(true);
-    const fetchDashboardData = async () => {
-      try {
-        setError(null);
-        const apiUrl = getApiUrl();
-        const endpoint = `/dashboard/stats`;
-        console.log('Retrying fetch from:', `${apiUrl}${endpoint}`);
-        
-        // Use apiRequest helper which automatically includes auth token
-        const response = await apiRequest(endpoint, {
-          method: 'GET',
-          cache: 'no-store',
-        });
-
-        console.log('Response status:', response.status);
-        
-        if (!response.ok) {
-          // Handle 401 Unauthorized
-          if (response.status === 401) {
-            throw new Error('UNAUTHORIZED: Authentication required. Please log in.');
-          }
-          const errorText = await response.text();
-          console.error('Response error:', errorText);
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const result = await response.json();
-        console.log('Dashboard data received:', result);
-
-        if (!result.success) {
-          throw new Error(result.error?.message || 'Failed to fetch dashboard data');
-        }
-
-        if (result.data) {
-          setDashboardData(result.data);
-          console.log('Dashboard data set successfully');
-        } else {
-          throw new Error('No data received from server');
-        }
-      } catch (err: any) {
-        console.error('Error fetching dashboard data:', err);
-        
-        // Provide more helpful error messages
-        let errorMessage = 'Failed to load dashboard data.';
-        
-        if (err.message?.includes('UNAUTHORIZED') || err.message?.includes('Authentication required') || err.message?.includes('status: 401')) {
-          errorMessage = `Authentication Required\n\nYou need to log in to access the dashboard.\n\nPlease:\n1. Log in to your account at /login\n2. Make sure your authentication token is valid\n3. Check if your session has expired`;
-        } else if (err.message?.includes('Failed to fetch') || err.message?.includes('ERR_CONNECTION_REFUSED')) {
-          const apiUrl = getApiUrl();
-          errorMessage = `Cannot connect to backend at ${apiUrl}\n\nPlease check:\n1. Is your backend server running?\n2. Is the backend URL correct in .env.local? (NEXT_PUBLIC_API_URL)\n3. Is the backend running on the correct port?`;
-        } else {
-          errorMessage = err.message || 'Failed to load dashboard data. Please check the console for details.';
-        }
-        
-        setError(errorMessage);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchDashboardData();
   };
 
@@ -458,7 +439,7 @@ function DashboardTab({ currentUser, onNewOrder }: { currentUser: any; onNewOrde
               {error.includes('Authentication Required') || error.includes('UNAUTHORIZED') ? (
                 <Button 
                   onClick={() => window.location.href = '/login'} 
-                  className="bg-primary hover:bg-primary/90"
+                  className="bg-gradient-violet hover:opacity-90"
                 >
                   Go to Login
                 </Button>
@@ -486,10 +467,10 @@ function DashboardTab({ currentUser, onNewOrder }: { currentUser: any; onNewOrde
   return (
     <div className="space-y-6">
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat, index) => {
+        {stats.map((stat) => {
           const Icon = stat.icon;
           return (
-            <Card key={index} className="border-2 border-primary/20 shadow-xl">
+            <Card key={stat.label} className="border-2 border-violet-300/30 shadow-xl">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">{stat.label}</CardTitle>
                 <Icon className={`h-5 w-5 ${stat.color}`} />
@@ -504,7 +485,7 @@ function DashboardTab({ currentUser, onNewOrder }: { currentUser: any; onNewOrde
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Card className="border-2 border-primary/20 shadow-xl">
+        <Card className="border-2 border-violet-300/30 shadow-xl">
           <CardHeader>
             <CardTitle>Recent Orders</CardTitle>
             <CardDescription>Latest customer orders</CardDescription>
@@ -530,7 +511,7 @@ function DashboardTab({ currentUser, onNewOrder }: { currentUser: any; onNewOrde
           </CardContent>
         </Card>
 
-        <Card className="border-2 border-primary/20 shadow-xl">
+        <Card className="border-2 border-violet-300/30 shadow-xl">
           <CardHeader>
             <CardTitle>Recent Shipments</CardTitle>
             <CardDescription>Latest shipments</CardDescription>
@@ -562,7 +543,7 @@ function DashboardTab({ currentUser, onNewOrder }: { currentUser: any; onNewOrde
           </CardContent>
         </Card>
 
-        <Card className="border-2 border-primary/20 shadow-xl">
+        <Card className="border-2 border-violet-300/30 shadow-xl">
           <CardHeader>
             <CardTitle>Quick Actions</CardTitle>
             <CardDescription>Common administrative tasks</CardDescription>
@@ -975,7 +956,7 @@ function CustomerManagementTab() {
         </DialogContent>
       </Dialog>
 
-      <Card className="border-2 border-primary/20 shadow-xl">
+      <Card className="border-2 border-violet-300/30 shadow-xl">
         <CardHeader>
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
@@ -983,7 +964,7 @@ function CustomerManagementTab() {
               <CardDescription>Manage all your customers</CardDescription>
             </div>
             <Button 
-              className="bg-primary hover:bg-primary/90"
+              className="bg-gradient-violet hover:opacity-90"
               onClick={() => setShowCreateForm(true)}
             >
               <Plus className="w-4 h-4 mr-2" />
@@ -1010,7 +991,7 @@ function CustomerManagementTab() {
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-500 mx-auto mb-4"></div>
                 <p className="text-muted-foreground">Loading customers...</p>
               </div>
             </div>
@@ -1134,6 +1115,12 @@ function OrdersTab({ currentUser, openCreateForm: initialOpenForm = false, onFor
   const [showCreateForm, setShowCreateForm] = useState(initialOpenForm);
   const [editingOrder, setEditingOrder] = useState<any>(null);
   const [orderToDelete, setOrderToDelete] = useState<string | number | null>(null);
+  const isDriver = currentUser?.role === 'Driver';
+  const [autoBatching, setAutoBatching] = useState(false);
+  const [lastAutoBatchSignature, setLastAutoBatchSignature] = useState(() => {
+    if (typeof window === 'undefined') return "";
+    return sessionStorage.getItem('autoBatchSignature') || "";
+  });
   
   // Update form state when prop changes
   useEffect(() => {
@@ -1169,6 +1156,11 @@ function OrdersTab({ currentUser, openCreateForm: initialOpenForm = false, onFor
         
         if (searchQuery) {
           params.append('search', searchQuery);
+        }
+        
+        // For drivers, filter by status on backend (more efficient)
+        if (isDriver) {
+          params.append('status', 'out_for_delivery,in_transit');
         }
 
         const response = await apiRequest(`/orders?${params.toString()}`, {
@@ -1207,8 +1199,26 @@ function OrdersTab({ currentUser, openCreateForm: initialOpenForm = false, onFor
         if (!Array.isArray(ordersData)) {
           ordersData = [];
         }
+
+        // If driver, limit to out_for_delivery or in_transit orders only
+        const filteredOrders = isDriver
+          ? ordersData.filter((o: any) => {
+              const st = (o.status || '').toLowerCase().replace(/[_\s-]/g, '');
+              // Match: out_for_delivery, out-for-delivery, out for delivery, outfordelivery, etc.
+              // Match: in_transit, in-transit, in transit, intransit, etc.
+              return st === 'outfordelivery' || st === 'intransit';
+            })
+          : ordersData;
         
-        setOrders(ordersData);
+        if (isDriver) {
+          console.log('Driver orders filter:', {
+            totalOrders: ordersData.length,
+            filteredOrders: filteredOrders.length,
+            sampleStatuses: ordersData.slice(0, 3).map((o: any) => o.status)
+          });
+        }
+        
+        setOrders(filteredOrders);
         
         // Update pagination if available
         if (result.data?.pagination) {
@@ -1231,6 +1241,39 @@ function OrdersTab({ currentUser, openCreateForm: initialOpenForm = false, onFor
 
     return () => clearTimeout(timeoutId);
   }, [page, searchQuery]);
+
+  // Auto-create shipments by departure date for orders that are not yet assigned
+  useEffect(() => {
+    if (autoBatching) return;
+
+    const unbatchedOrders = orders.filter((order: any) => order.departureDate && !order.shipmentId && !order.shipment);
+    if (unbatchedOrders.length === 0) {
+      setLastAutoBatchSignature("");
+      if (typeof window !== 'undefined') {
+        sessionStorage.removeItem('autoBatchSignature');
+      }
+      return;
+    }
+
+    const signature = unbatchedOrders
+      .map((order: any) => order.id || order._id || "")
+      .filter(Boolean)
+      .sort()
+      .join("|");
+
+    if (!signature || signature === lastAutoBatchSignature) {
+      return;
+    }
+
+    setAutoBatching(true);
+    setLastAutoBatchSignature(signature);
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('autoBatchSignature', signature);
+    }
+
+    handleCreateShipmentsFromOrders(unbatchedOrders, true)
+      .finally(() => setAutoBatching(false));
+  }, [orders, autoBatching, lastAutoBatchSignature]);
 
   const handleCreateOrder = async (data: any) => {
     try {
@@ -1418,12 +1461,12 @@ function OrdersTab({ currentUser, openCreateForm: initialOpenForm = false, onFor
     }
   };
 
-  const handleCreateShipmentsFromOrders = async () => {
+  const handleCreateShipmentsFromOrders = async (sourceOrders: any[] = orders, isAuto = false) => {
     try {
       // Group orders by departure date
       const ordersByDate: { [key: string]: any[] } = {};
       
-      orders.forEach((order: any) => {
+      sourceOrders.forEach((order: any) => {
         if (order.departureDate) {
           const dateKey = new Date(order.departureDate).toISOString().split('T')[0]; // YYYY-MM-DD
           if (!ordersByDate[dateKey]) {
@@ -1440,11 +1483,13 @@ function OrdersTab({ currentUser, openCreateForm: initialOpenForm = false, onFor
       const datesWithOrders = Object.keys(ordersByDate).filter(date => ordersByDate[date].length > 0);
 
       if (datesWithOrders.length === 0) {
-        toast({
-          title: "No Orders Available",
-          description: "No orders with departure dates found, or all orders are already assigned to shipments.",
-          variant: "default",
-        });
+        if (!isAuto) {
+          toast({
+            title: "No Orders Available",
+            description: "No orders with departure dates found, or all orders are already assigned to shipments.",
+            variant: "default",
+          });
+        }
         return;
       }
 
@@ -1458,7 +1503,7 @@ function OrdersTab({ currentUser, openCreateForm: initialOpenForm = false, onFor
           const response = await apiRequest('/shipments/create-from-orders', {
             method: 'POST',
             body: JSON.stringify({
-              departureDate: date,
+              // Let backend use the persisted departureDate for these orders
               orderIds: orderIds,
             }),
           });
@@ -1476,10 +1521,13 @@ function OrdersTab({ currentUser, openCreateForm: initialOpenForm = false, onFor
 
       if (createdCount > 0) {
         toast({
-          title: "Success",
-          description: `Created ${createdCount} shipment(s) from orders grouped by departure date.`,
+          title: isAuto ? "Shipments auto-batched" : "Success",
+          description: isAuto 
+            ? `Automatically grouped ${createdCount} batch(es) by departure date.`
+            : `Created ${createdCount} shipment(s) from orders grouped by departure date.`,
           variant: "default",
         });
+
         // Refresh orders list
         const fetchResponse = await apiRequest(`/orders?page=${page}&limit=10`, {
           method: 'GET',
@@ -1509,11 +1557,21 @@ function OrdersTab({ currentUser, openCreateForm: initialOpenForm = false, onFor
       }
     } catch (err: any) {
       console.error('Error creating shipments:', err);
-      toast({
-        title: "Error",
-        description: "Failed to create shipments: " + err.message,
-        variant: "destructive",
-      });
+      if (!isAuto) {
+        toast({
+          title: "Error",
+          description: "Failed to create shipments: " + err.message,
+          variant: "destructive",
+        });
+      } else {
+        // Reset signature so we can retry on next data change
+        setLastAutoBatchSignature("");
+        toast({
+          title: "Auto-batch failed",
+          description: err.message || "Unable to group shipments automatically.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -1525,6 +1583,19 @@ function OrdersTab({ currentUser, openCreateForm: initialOpenForm = false, onFor
         variant: "destructive",
       });
       return;
+    }
+
+    // For drivers, only allow specific status changes
+    if (isDriver) {
+      const normalizedNewStatus = newStatus.toLowerCase().replace(/[_\s-]/g, '');
+      if (normalizedNewStatus !== 'outfordelivery' && normalizedNewStatus !== 'delivered') {
+        toast({
+          title: "Invalid Status",
+          description: "Drivers can only update orders to 'Out for Delivery' or 'Delivered'",
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     try {
@@ -1709,7 +1780,7 @@ function OrdersTab({ currentUser, openCreateForm: initialOpenForm = false, onFor
         </AlertDialogContent>
       </AlertDialog>
 
-      <Card className="border-2 border-primary/20 shadow-xl">
+      <Card className="border-2 border-violet-300/30 shadow-xl">
         <CardHeader>
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
@@ -1721,7 +1792,7 @@ function OrdersTab({ currentUser, openCreateForm: initialOpenForm = false, onFor
                 <Dialog open={showCreateForm} onOpenChange={handleDialogChange}>
                   <DialogTrigger asChild>
                     <Button 
-                      className="bg-primary hover:bg-primary/90"
+                      className="bg-gradient-violet hover:opacity-90"
                       onClick={() => setShowCreateForm(true)}
                     >
                       <Plus className="w-4 h-4 mr-2" />
@@ -1735,16 +1806,6 @@ function OrdersTab({ currentUser, openCreateForm: initialOpenForm = false, onFor
                     <OrderForm onSave={handleCreateOrder} onCancel={handleFormClose} />
                   </DialogContent>
                 </Dialog>
-              )}
-              {hasPermission(currentUser, Permissions.ORDER_MODIFY) && (
-                <Button 
-                  variant="outline"
-                  onClick={handleCreateShipmentsFromOrders}
-                  disabled={loading || orders.length === 0}
-                >
-                  <Layers className="w-4 h-4 mr-2" />
-                  Create Shipments from Orders
-                </Button>
               )}
             </div>
           </div>
@@ -1768,7 +1829,7 @@ function OrdersTab({ currentUser, openCreateForm: initialOpenForm = false, onFor
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-500 mx-auto mb-4"></div>
                 <p className="text-muted-foreground">Loading orders...</p>
               </div>
             </div>
@@ -1792,7 +1853,12 @@ function OrdersTab({ currentUser, openCreateForm: initialOpenForm = false, onFor
               <div className="text-center">
                 <ShoppingCart className="h-8 w-8 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground">No orders found</p>
-                {searchQuery && (
+                {isDriver && (
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Drivers can only see orders with status "Out for Delivery" or "In Transit"
+                  </p>
+                )}
+                {searchQuery && !isDriver && (
                   <p className="text-sm text-muted-foreground mt-2">
                     Try adjusting your search query
                   </p>
@@ -1839,20 +1905,29 @@ function OrdersTab({ currentUser, openCreateForm: initialOpenForm = false, onFor
                         <TableCell>
                           {hasPermission(currentUser, Permissions.ORDER_MODIFY) ? (
                             <Select
-                              value={order.status || 'pending'}
+                              value={(order.status || 'pending').toLowerCase()}
                               onValueChange={(newStatus) => handleOrderStatusChange(orderId, newStatus)}
                             >
-                              <SelectTrigger className="w-[140px]">
-                                <SelectValue />
+                              <SelectTrigger className="w-[200px] md:w-[220px]">
+                                <SelectValue placeholder="Select status" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="pending">Pending</SelectItem>
-                                <SelectItem value="processing">Processing</SelectItem>
-                                <SelectItem value="confirmed">Confirmed</SelectItem>
-                                <SelectItem value="in_transit">In Transit</SelectItem>
-                                <SelectItem value="delivered">Delivered</SelectItem>
-                                <SelectItem value="completed">Completed</SelectItem>
-                                <SelectItem value="cancelled">Cancelled</SelectItem>
+                                {isDriver ? (
+                                  <>
+                                    <SelectItem value="out_for_delivery">Out for Delivery</SelectItem>
+                                    <SelectItem value="delivered">Delivered</SelectItem>
+                                  </>
+                                ) : (
+                                  <>
+                                    <SelectItem value="pending">Pending</SelectItem>
+                                    <SelectItem value="processing">Processing</SelectItem>
+                                    <SelectItem value="confirmed">Confirmed</SelectItem>
+                                    <SelectItem value="in_transit">In Transit</SelectItem>
+                                    <SelectItem value="delivered">Delivered</SelectItem>
+                                    <SelectItem value="completed">Completed</SelectItem>
+                                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                                  </>
+                                )}
                               </SelectContent>
                             </Select>
                           ) : (
@@ -1946,83 +2021,94 @@ function ShipmentsTab({ currentUser }: { currentUser: any }) {
   const [showIndividualUpdate, setShowIndividualUpdate] = useState(false);
   const [updatingShipment, setUpdatingShipment] = useState<any>(null);
   const [expandedShipments, setExpandedShipments] = useState<Set<string>>(new Set());
+  const [shipmentOrders, setShipmentOrders] = useState<Record<string, any[]>>({});
+  const [loadingOrders, setLoadingOrders] = useState<Record<string, boolean>>({});
+  const isDriver = currentUser?.role === 'Driver';
+
+  const fetchShipments = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: '10',
+      });
+      
+      if (searchQuery) {
+        params.append('search', searchQuery);
+      }
+
+      const response = await apiRequest(`/shipments?${params.toString()}`, {
+        method: 'GET',
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Authentication required. Please log in.');
+        }
+        throw new Error(`Failed to fetch shipments: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error?.message || 'Failed to fetch shipments');
+      }
+
+      // Handle different response structures from Shipment Collection
+      let shipmentsData = [];
+      
+      if (result.data) {
+        if (Array.isArray(result.data)) {
+          shipmentsData = result.data;
+        } else if (result.data.items && Array.isArray(result.data.items)) {
+          // Paginated response: data.items
+          shipmentsData = result.data.items;
+        } else if (result.data.shipments && Array.isArray(result.data.shipments)) {
+          // Response: data.shipments
+          shipmentsData = result.data.shipments;
+        }
+      }
+      
+      // Ensure we have an array
+      if (!Array.isArray(shipmentsData)) {
+        shipmentsData = [];
+      }
+      
+      // If driver, only show shipments that are out_for_delivery
+      const filtered = isDriver
+        ? shipmentsData.filter((s: any) => {
+            const st = (s.currentStatus || s.status || '').toLowerCase();
+            return st === 'out_for_delivery' || st === 'in_transit';
+          })
+        : shipmentsData;
+
+      setShipments(filtered);
+      
+      // Update pagination if available
+      if (result.data?.pagination) {
+        setTotalPages(result.data.pagination.totalPages || 1);
+      } else {
+        setTotalPages(1);
+      }
+    } catch (err: any) {
+      console.error('Error fetching shipments:', err);
+      setError(err.message || 'Failed to load shipments');
+    } finally {
+      setLoading(false);
+    }
+  }, [page, searchQuery]);
 
   // Fetch shipments from backend
   useEffect(() => {
-    const fetchShipments = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        const params = new URLSearchParams({
-          page: page.toString(),
-          limit: '10',
-        });
-        
-        if (searchQuery) {
-          params.append('search', searchQuery);
-        }
-
-        const response = await apiRequest(`/shipments?${params.toString()}`, {
-          method: 'GET',
-        });
-
-        if (!response.ok) {
-          if (response.status === 401) {
-            throw new Error('Authentication required. Please log in.');
-          }
-          throw new Error(`Failed to fetch shipments: ${response.status}`);
-        }
-
-        const result = await response.json();
-
-        if (!result.success) {
-          throw new Error(result.error?.message || 'Failed to fetch shipments');
-        }
-
-        // Handle different response structures from Shipment Collection
-        let shipmentsData = [];
-        
-        if (result.data) {
-          if (Array.isArray(result.data)) {
-            shipmentsData = result.data;
-          } else if (result.data.items && Array.isArray(result.data.items)) {
-            // Paginated response: data.items
-            shipmentsData = result.data.items;
-          } else if (result.data.shipments && Array.isArray(result.data.shipments)) {
-            // Response: data.shipments
-            shipmentsData = result.data.shipments;
-          }
-        }
-        
-        // Ensure we have an array
-        if (!Array.isArray(shipmentsData)) {
-          shipmentsData = [];
-        }
-        
-        setShipments(shipmentsData);
-        
-        // Update pagination if available
-        if (result.data?.pagination) {
-          setTotalPages(result.data.pagination.totalPages || 1);
-        } else {
-          setTotalPages(1);
-        }
-      } catch (err: any) {
-        console.error('Error fetching shipments:', err);
-        setError(err.message || 'Failed to load shipments');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     // Debounce search
     const timeoutId = setTimeout(() => {
       fetchShipments();
     }, searchQuery ? 500 : 0);
 
     return () => clearTimeout(timeoutId);
-  }, [page, searchQuery]);
+  }, [page, searchQuery, fetchShipments]);
 
   const handleBulkUpdate = async (data: any) => {
     try {
@@ -2049,15 +2135,7 @@ function ShipmentsTab({ currentUser }: { currentUser: any }) {
       // Refresh shipments list
       setSelectedShipments([]);
       setShowBulkUpdate(false);
-      
-      // Refetch shipments
-      const fetchResponse = await apiRequest(`/shipments?page=${page}&limit=10`, {
-        method: 'GET',
-      });
-      const fetchResult = await fetchResponse.json();
-      if (fetchResult.success && fetchResult.data?.items) {
-        setShipments(fetchResult.data.items);
-      }
+      await fetchShipments();
     } catch (err: any) {
       console.error('Error updating shipments:', err);
       toast({
@@ -2071,7 +2149,8 @@ function ShipmentsTab({ currentUser }: { currentUser: any }) {
   const handleIndividualUpdate = async (data: any) => {
     try {
       const shipmentId = updatingShipment.id || updatingShipment._id;
-      const response = await apiRequest(`/shipments/${shipmentId}/status`, {
+      // Update shipment status (backend expects status in body; endpoint without /status to avoid 404)
+      const response = await apiRequest(`/shipments/${shipmentId}`, {
         method: 'PUT',
         body: JSON.stringify({
           status: data.status,
@@ -2091,41 +2170,12 @@ function ShipmentsTab({ currentUser }: { currentUser: any }) {
       }
 
       // Refetch shipments from backend to get updated data from Shipment Collection
-      try {
-        const fetchResponse = await apiRequest(`/shipments?page=${page}&limit=10${searchQuery ? `&search=${searchQuery}` : ''}`, {
-          method: 'GET',
-        });
-        
-        if (fetchResponse.ok) {
-          const fetchResult = await fetchResponse.json();
-          let shipmentsData = [];
-          
-          if (fetchResult.data) {
-            if (Array.isArray(fetchResult.data)) {
-              shipmentsData = fetchResult.data;
-            } else if (fetchResult.data.items && Array.isArray(fetchResult.data.items)) {
-              shipmentsData = fetchResult.data.items;
-            } else if (fetchResult.data.shipments && Array.isArray(fetchResult.data.shipments)) {
-              shipmentsData = fetchResult.data.shipments;
-            }
-          }
-          
-          if (Array.isArray(shipmentsData)) {
-            setShipments(shipmentsData);
-          }
-          
-          if (fetchResult.data?.pagination) {
-            setTotalPages(fetchResult.data.pagination.totalPages || 1);
-          }
-        }
-      } catch (fetchErr) {
-        console.error('Error refetching shipments after update:', fetchErr);
-        // Fallback: update local state
-        setShipments(shipments.map(s => 
-          (s.id || s._id) === shipmentId 
-            ? { ...s, currentStatus: data.status, status: data.status } 
-            : s
-        ));
+      await fetchShipments();
+      
+      // Refresh orders if shipment is expanded
+      const updatedShipmentId = updatingShipment?.id || updatingShipment?._id;
+      if (updatedShipmentId && expandedShipments.has(String(updatedShipmentId))) {
+        await fetchShipmentOrders(String(updatedShipmentId));
       }
       
       setUpdatingShipment(null);
@@ -2157,7 +2207,8 @@ function ShipmentsTab({ currentUser }: { currentUser: any }) {
     }
 
     try {
-      const response = await apiRequest(`/shipments/${shipmentId}/status`, {
+      // Update shipment status (backend expects status in body; endpoint without /status to avoid 404)
+      const response = await apiRequest(`/shipments/${shipmentId}`, {
         method: 'PUT',
         body: JSON.stringify({
           status: newStatus,
@@ -2176,46 +2227,11 @@ function ShipmentsTab({ currentUser }: { currentUser: any }) {
         throw new Error(result.error?.message || 'Failed to update shipment status');
       }
 
-      // Refetch shipments from backend to get updated data from Shipment Collection
-      try {
-        const fetchResponse = await apiRequest(`/shipments?page=${page}&limit=10${searchQuery ? `&search=${searchQuery}` : ''}`, {
-          method: 'GET',
-        });
-        
-        if (fetchResponse.ok) {
-          const fetchResult = await fetchResponse.json();
-          let shipmentsData = [];
-          
-          if (fetchResult.data) {
-            if (Array.isArray(fetchResult.data)) {
-              shipmentsData = fetchResult.data;
-            } else if (fetchResult.data.items && Array.isArray(fetchResult.data.items)) {
-              shipmentsData = fetchResult.data.items;
-            } else if (fetchResult.data.shipments && Array.isArray(fetchResult.data.shipments)) {
-              shipmentsData = fetchResult.data.shipments;
-            }
-          }
-          
-          if (Array.isArray(shipmentsData)) {
-            setShipments(shipmentsData);
-          }
-          
-          if (fetchResult.data?.pagination) {
-            setTotalPages(fetchResult.data.pagination.totalPages || 1);
-          }
-        }
-      } catch (fetchErr) {
-        console.error('Error refetching shipments after status update:', fetchErr);
-        // Fallback: update local state
-        setShipments(prevShipments => 
-          prevShipments.map(s => {
-            const sId = s.id || s._id;
-            if (sId === shipmentId) {
-              return { ...s, status: newStatus, currentStatus: newStatus };
-            }
-            return s;
-          })
-        );
+      await fetchShipments();
+      
+      // Refresh orders if shipment is expanded
+      if (expandedShipments.has(String(shipmentId))) {
+        await fetchShipmentOrders(String(shipmentId));
       }
 
       toast({
@@ -2233,6 +2249,62 @@ function ShipmentsTab({ currentUser }: { currentUser: any }) {
     }
   };
 
+  const fetchShipmentOrders = async (shipmentId: string) => {
+    try {
+      setLoadingOrders(prev => ({ ...prev, [shipmentId]: true }));
+      
+      const response = await apiRequest(`/shipments/${shipmentId}`, {
+        method: 'GET',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch shipment orders');
+      }
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error?.message || 'Failed to fetch shipment orders');
+      }
+
+      const shipment = result.data;
+      // Get orders from shipment - can be populated orders array or orderIds array
+      const orders = shipment.orders || shipment.orderIds || [];
+      
+      // If orders are just IDs, fetch each order's details
+      if (orders.length > 0 && typeof orders[0] === 'string') {
+        const orderDetails = await Promise.all(
+          orders.map(async (orderId: string) => {
+            try {
+              const orderResponse = await apiRequest(`/orders/${orderId}`, {
+                method: 'GET',
+              });
+              if (orderResponse.ok) {
+                const orderResult = await orderResponse.json();
+                return orderResult.data || orderResult;
+              }
+              return { id: orderId, orderNumber: orderId, status: 'pending' };
+            } catch (err) {
+              return { id: orderId, orderNumber: orderId, status: 'pending' };
+            }
+          })
+        );
+        setShipmentOrders(prev => ({ ...prev, [shipmentId]: orderDetails }));
+      } else {
+        setShipmentOrders(prev => ({ ...prev, [shipmentId]: orders }));
+      }
+    } catch (err: any) {
+      console.error('Error fetching shipment orders:', err);
+      toast({
+        title: "Error",
+        description: "Failed to load order details: " + err.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingOrders(prev => ({ ...prev, [shipmentId]: false }));
+    }
+  };
+
   const toggleShipmentExpansion = (shipmentId: string) => {
     setExpandedShipments(prev => {
       const newSet = new Set(prev);
@@ -2240,6 +2312,10 @@ function ShipmentsTab({ currentUser }: { currentUser: any }) {
         newSet.delete(shipmentId);
       } else {
         newSet.add(shipmentId);
+        // Fetch orders when expanding
+        if (!shipmentOrders[shipmentId]) {
+          fetchShipmentOrders(shipmentId);
+        }
       }
       return newSet;
     });
@@ -2263,7 +2339,7 @@ function ShipmentsTab({ currentUser }: { currentUser: any }) {
 
   return (
     <div className="space-y-6">
-      <Card className="border-2 border-primary/20 shadow-xl">
+      <Card className="border-2 border-violet-300/30 shadow-xl">
         <CardHeader>
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
@@ -2314,7 +2390,7 @@ function ShipmentsTab({ currentUser }: { currentUser: any }) {
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-500 mx-auto mb-4"></div>
                 <p className="text-muted-foreground">Loading shipments...</p>
               </div>
             </div>
@@ -2375,15 +2451,16 @@ function ShipmentsTab({ currentUser }: { currentUser: any }) {
                     const shipmentDate = shipment.createdAt ? new Date(shipment.createdAt) : (shipment.date ? new Date(shipment.date) : new Date());
                     const departureDate = shipment.departureDate ? new Date(shipment.departureDate) : null;
                     // Get status from Shipment Collection (support both currentStatus and status fields)
-                    const status = shipment.currentStatus || shipment.status || 'pending';
+                    const rawStatus = shipment.currentStatus || shipment.status || 'pending';
+                    const status = (rawStatus || '').toLowerCase();
                     // Get orders from Shipment Collection - can be populated orders array or orderIds array
                     const orders = shipment.orders || shipment.orderIds || [];
                     const ordersCount = Array.isArray(orders) ? orders.length : (shipment.orderIds ? shipment.orderIds.length : 0);
                     const isExpanded = expandedShipments.has(shipmentId);
 
                     return (
-                      <>
-                        <TableRow key={shipmentId}>
+                      <Fragment key={shipmentId}>
+                        <TableRow>
                           {hasPermission(currentUser, Permissions.SHIPMENT_BULK_UPDATE) && (
                             <TableCell>
                               <Checkbox
@@ -2428,17 +2505,26 @@ function ShipmentsTab({ currentUser }: { currentUser: any }) {
                                 value={status}
                                 onValueChange={(newStatus) => handleShipmentStatusChange(shipmentId, newStatus)}
                               >
-                                <SelectTrigger className="w-[140px]">
-                                  <SelectValue />
+                                <SelectTrigger className="w-[200px] md:w-[220px]">
+                                  <SelectValue placeholder="Select status" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="pending">Pending</SelectItem>
-                                  <SelectItem value="processing">Processing</SelectItem>
-                                  <SelectItem value="confirmed">Confirmed</SelectItem>
-                                  <SelectItem value="in_transit">In Transit</SelectItem>
-                                  <SelectItem value="delivered">Delivered</SelectItem>
-                                  <SelectItem value="completed">Completed</SelectItem>
-                                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                                  {isDriver ? (
+                                    <>
+                                      <SelectItem value="out_for_delivery">Out for Delivery</SelectItem>
+                                      <SelectItem value="delivered">Delivered</SelectItem>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <SelectItem value="pending">Pending</SelectItem>
+                                      <SelectItem value="processing">Processing</SelectItem>
+                                      <SelectItem value="confirmed">Confirmed</SelectItem>
+                                      <SelectItem value="in_transit">In Transit</SelectItem>
+                                      <SelectItem value="delivered">Delivered</SelectItem>
+                                      <SelectItem value="completed">Completed</SelectItem>
+                                      <SelectItem value="cancelled">Cancelled</SelectItem>
+                                    </>
+                                  )}
                                 </SelectContent>
                               </Select>
                             ) : (
@@ -2492,14 +2578,25 @@ function ShipmentsTab({ currentUser }: { currentUser: any }) {
                                 </DialogContent>
                               </Dialog>
                             )}
-                            <Button 
-                              variant="ghost" 
-                              size="icon"
-                              onClick={() => window.open(`/track/${batchNumber}`, '_blank')}
-                              title="View Details"
-                            >
-                              <ArrowRight className="w-4 h-4" />
-                            </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => {
+                              const trackingLinkId = shipment.trackingId || batchNumber || shipmentId;
+                              if (trackingLinkId) {
+                                window.open(`/track/${trackingLinkId}`, '_blank');
+                              } else {
+                                toast({
+                                  title: "Tracking unavailable",
+                                  description: "No tracking ID or batch number found for this shipment.",
+                                  variant: "destructive",
+                                });
+                              }
+                            }}
+                            title="View Details"
+                          >
+                            <ArrowRight className="w-4 h-4" />
+                          </Button>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -2509,21 +2606,46 @@ function ShipmentsTab({ currentUser }: { currentUser: any }) {
                             <div className="py-4">
                               <h4 className="font-semibold mb-3">Orders in this Shipment ({ordersCount}):</h4>
                               <div className="space-y-2">
-                                {Array.isArray(orders) && orders.length > 0 ? (
+                                {loadingOrders[shipmentId] ? (
+                                  <div className="flex items-center justify-center py-4">
+                                    <div className="text-center">
+                                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-violet-500 mx-auto mb-2"></div>
+                                      <p className="text-sm text-muted-foreground">Loading order details...</p>
+                                    </div>
+                                  </div>
+                                ) : shipmentOrders[shipmentId] && shipmentOrders[shipmentId].length > 0 ? (
+                                  shipmentOrders[shipmentId].map((order: any, idx: number) => {
+                                    const orderId = order.id || order._id || '';
+                                    const orderNumber = order.orderNumber || orderId;
+                                    const orderStatus = order.status || 'pending';
+                                    
+                                    return (
+                                      <div key={orderId || idx} className="flex items-center justify-between p-2 border rounded">
+                                        <div className="flex items-center gap-4">
+                                          <span className="font-medium">{orderNumber}</span>
+                                          <Badge variant={orderStatus === 'completed' ? 'default' : 'secondary'}>
+                                            {orderStatus}
+                                          </Badge>
+                                        </div>
+                                      </div>
+                                    );
+                                  })
+                                ) : Array.isArray(orders) && orders.length > 0 ? (
                                   orders.map((order: any, idx: number) => {
-                                    // Handle both populated order objects from Shipment Collection and order IDs
-                                    const orderId = order.id || order._id || order;
-                                    const orderNumber = order.orderNumber || order.orderId?.orderNumber || orderId;
-                                    const customerName = order.customerId?.firstName && order.customerId?.lastName
-                                      ? `${order.customerId.firstName} ${order.customerId.lastName}`
-                                      : order.customer || order.customerId?.email || 'N/A';
-                                    const orderStatus = order.status || order.orderId?.status || 'pending';
+                                    // Fallback to original orders if fetched orders not available
+                                    const isOrderId = typeof order === 'string';
+                                    const orderId = isOrderId ? order : (order.id || order._id || order);
+                                    const orderNumber = isOrderId 
+                                      ? orderId
+                                      : (order.orderNumber || order.orderId?.orderNumber || order.orderId || orderId);
+                                    const orderStatus = isOrderId 
+                                      ? 'pending'
+                                      : (order.status || order.orderId?.status || 'pending');
                                     
                                     return (
                                       <div key={idx} className="flex items-center justify-between p-2 border rounded">
                                         <div className="flex items-center gap-4">
                                           <span className="font-medium">{orderNumber}</span>
-                                          <span className="text-sm text-muted-foreground">{customerName}</span>
                                           <Badge variant={orderStatus === 'completed' ? 'default' : 'secondary'}>
                                             {orderStatus}
                                           </Badge>
@@ -2539,7 +2661,7 @@ function ShipmentsTab({ currentUser }: { currentUser: any }) {
                           </TableCell>
                         </TableRow>
                       )}
-                    </>
+                    </Fragment>
                     );
                   })}
                 </TableBody>
@@ -2933,7 +3055,7 @@ function BranchManagementTab() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <Card className="border-2 border-primary/20 shadow-xl">
+      <Card className="border-2 border-violet-300/30 shadow-xl">
         <CardHeader>
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
@@ -2942,7 +3064,7 @@ function BranchManagementTab() {
             </div>
             <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
               <DialogTrigger asChild>
-                <Button className="bg-primary hover:bg-primary/90">
+                <Button className="bg-gradient-violet hover:opacity-90">
                   <Plus className="w-4 h-4 mr-2" />
                   Add Branch
                 </Button>
@@ -2972,7 +3094,7 @@ function BranchManagementTab() {
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-500 mx-auto mb-4"></div>
                 <p className="text-muted-foreground">Loading branches...</p>
               </div>
             </div>
@@ -3012,7 +3134,7 @@ function BranchManagementTab() {
                   : branch.location || 'N/A';
 
                 return (
-                  <Card key={branchId} className="border-2 border-primary/10">
+                  <Card key={branchId} className="border-2 border-violet-500/10">
                     <CardHeader>
                       <CardTitle className="text-lg">{branch.name || 'Unnamed Branch'}</CardTitle>
                     </CardHeader>
@@ -3160,7 +3282,7 @@ function BranchForm({ branch, onSave, onCancel }: { branch?: any; onSave: (data:
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancel
         </Button>
-        <Button type="submit" className="bg-primary hover:bg-primary/90">
+        <Button type="submit" className="bg-gradient-violet hover:opacity-90">
           <Save className="w-4 h-4 mr-2" />
           Save
         </Button>
@@ -3585,7 +3707,7 @@ function UserManagementTab({ currentUser }: { currentUser: any }) {
         </AlertDialogContent>
       </AlertDialog>
 
-      <Card className="border-2 border-primary/20 shadow-xl">
+      <Card className="border-2 border-violet-300/30 shadow-xl">
         <CardHeader>
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
@@ -3595,7 +3717,7 @@ function UserManagementTab({ currentUser }: { currentUser: any }) {
             {hasPermission(currentUser, Permissions.USER_CREATE) && (
               <Dialog open={showUserForm} onOpenChange={setShowUserForm}>
                 <DialogTrigger asChild>
-                  <Button className="bg-primary hover:bg-primary/90">
+                  <Button className="bg-gradient-violet hover:opacity-90">
                     <Plus className="w-4 h-4 mr-2" />
                     Add User
                   </Button>
@@ -3647,7 +3769,7 @@ function UserManagementTab({ currentUser }: { currentUser: any }) {
             </div>
           ) : loading ? (
             <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <Loader2 className="h-8 w-8 animate-spin text-violet-600" />
             </div>
           ) : !Array.isArray(users) || users.length === 0 ? (
             <div className="flex items-center justify-center py-12">
@@ -3863,7 +3985,7 @@ function RolesManagementTab() {
           throw new Error(result.error?.message || 'Failed to fetch roles');
         }
 
-        // Handle different response structures
+        // Handle different response structures and fall back to root array
         let rolesData = [];
         
         if (result.data) {
@@ -3874,74 +3996,17 @@ function RolesManagementTab() {
           } else if (result.data.items && Array.isArray(result.data.items)) {
             rolesData = result.data.items;
           }
+        } else if (Array.isArray(result)) {
+          // Fallback if backend returns array at root
+          rolesData = result;
         }
         
         if (!Array.isArray(rolesData)) {
           rolesData = [];
         }
         
-        // Deduplicate roles by normalized name
-        const roleNameMap: Record<string, string> = {
-          'Staff': 'Hub Receiver',
-          'Manager': 'Admin',
-          'staff': 'Hub Receiver',
-          'manager': 'Admin',
-          'Staff Member': 'Hub Receiver',
-          'Manager Role': 'Admin',
-        };
-        
-        const validRoles = ['Driver', 'Super Admin', 'Admin', 'Hub Receiver'];
-        
-        // Normalize role names and deduplicate
-        const normalizedRoles = new Map<string, any>();
-        
-        rolesData.forEach((role: any) => {
-          let roleName = role.name || role.role || 'Unknown Role';
-          
-          // Map old role names to correct role names
-          if (roleNameMap[roleName]) {
-            roleName = roleNameMap[roleName];
-          }
-          
-          // Ensure role name matches one of our defined roles
-          if (!validRoles.includes(roleName)) {
-            // Try to find a match (case-insensitive)
-            const matchedRole = validRoles.find(r => 
-              r.toLowerCase() === roleName.toLowerCase() ||
-              roleName.toLowerCase().includes(r.toLowerCase()) ||
-              r.toLowerCase().includes(roleName.toLowerCase())
-            );
-            if (matchedRole) {
-              roleName = matchedRole;
-            } else {
-              // Skip invalid roles
-              return;
-            }
-          }
-          
-          // Update role name to normalized value
-          const normalizedRole = {
-            ...role,
-            name: roleName,
-          };
-          
-          // If we already have this role, prefer the one that already has the correct name
-          if (!normalizedRoles.has(roleName)) {
-            normalizedRoles.set(roleName, normalizedRole);
-          } else {
-            // If current role already has correct name, prefer it
-            const existingRole = normalizedRoles.get(roleName);
-            if (existingRole && (existingRole.name || existingRole.role) !== roleName && 
-                (role.name || role.role) === roleName) {
-              normalizedRoles.set(roleName, normalizedRole);
-            }
-          }
-        });
-        
-        // Convert map back to array
-        const uniqueRoles = Array.from(normalizedRoles.values());
-        
-        setRoles(uniqueRoles);
+        // Keep all roles as returned by backend to allow updating any role
+        setRoles(rolesData);
       } catch (err: any) {
         console.error('Error fetching roles:', err);
         setError(err.message || 'Failed to load roles');
@@ -4071,7 +4136,7 @@ function RolesManagementTab() {
 
   return (
     <div className="space-y-6">
-      <Card className="border-2 border-primary/20 shadow-xl">
+      <Card className="border-2 border-violet-300/30 shadow-xl">
         <CardHeader>
           <div>
             <CardTitle className="text-2xl">Roles & Permissions</CardTitle>
@@ -4082,7 +4147,7 @@ function RolesManagementTab() {
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-500 mx-auto mb-4"></div>
                 <p className="text-muted-foreground">Loading roles...</p>
               </div>
             </div>
@@ -4150,7 +4215,7 @@ function RolesManagementTab() {
                 return (
                   <Card 
                     key={roleId} 
-                    className="border-2 border-primary/10 cursor-pointer hover:border-primary/30 transition-colors"
+                    className="border-2 border-violet-500/10 cursor-pointer hover:border-violet-500/30 transition-colors"
                     onClick={() => handleRoleClick(role)}
                   >
                     <CardHeader>
@@ -4166,7 +4231,7 @@ function RolesManagementTab() {
                         {Object.keys(groupedPermissions).length > 0 ? (
                           Object.keys(groupedPermissions).map((category) => (
                             <div key={category}>
-                              <h4 className="font-semibold text-sm mb-2 text-primary">
+                              <h4 className="font-semibold text-sm mb-2 text-violet-600">
                                 {permissionCategories[category].title}
                               </h4>
                               <ul className="space-y-1">
@@ -4211,7 +4276,7 @@ function RolesManagementTab() {
               const categoryData = permissionCategories[category];
               return (
                 <div key={category} className="space-y-3">
-                  <h4 className="font-semibold text-base text-primary border-b pb-2">
+                  <h4 className="font-semibold text-base text-violet-600 border-b pb-2">
                     {categoryData.title}
                   </h4>
                   <div className="space-y-2 pl-4">
@@ -4253,7 +4318,7 @@ function RolesManagementTab() {
             <Button
               onClick={handleSavePermissions}
               disabled={saving}
-              className="bg-primary hover:bg-primary/90"
+              className="bg-gradient-violet hover:opacity-90"
             >
               {saving ? (
                 <>
@@ -4464,7 +4529,7 @@ function WebPageManagementTab() {
 
         {/* Hero Images Sub-tab */}
         <TabsContent value="images">
-          <Card className="border-2 border-primary/20 shadow-xl">
+          <Card className="border-2 border-violet-300/30 shadow-xl">
             <CardHeader>
               <div className="flex items-center justify-between flex-wrap gap-4">
                 <div>
@@ -4475,7 +4540,7 @@ function WebPageManagementTab() {
                 </div>
                 <Button 
                   onClick={() => setShowAddImageDialog(true)}
-                  className="bg-primary hover:bg-primary/90"
+                  className="bg-gradient-violet hover:opacity-90"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Add Image
@@ -4496,7 +4561,7 @@ function WebPageManagementTab() {
               ) : (
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                   {heroImages.map((image) => (
-                    <Card key={image.id} className="border-2 border-primary/10 overflow-hidden">
+                    <Card key={image.id} className="border-2 border-violet-500/10 overflow-hidden">
                       <div className="relative h-48">
                         <Image
                           src={image.path || image.url || '/placeholder-hero.jpg'}
@@ -4552,7 +4617,7 @@ function WebPageManagementTab() {
 
         {/* Reviews Sub-tab */}
         <TabsContent value="reviews">
-          <Card className="border-2 border-primary/20 shadow-xl">
+          <Card className="border-2 border-violet-300/30 shadow-xl">
             <CardHeader>
               <div className="flex items-center justify-between flex-wrap gap-4">
                 <div>
@@ -4567,7 +4632,7 @@ function WebPageManagementTab() {
                     className="hidden"
                     id="review-upload"
                   />
-                  <Button asChild className="bg-primary hover:bg-primary/90">
+                  <Button asChild className="bg-gradient-violet hover:opacity-90">
                     <label htmlFor="review-upload" className="cursor-pointer">
                       <Upload className="w-4 h-4 mr-2" />
                       Upload Screenshot
@@ -4579,7 +4644,7 @@ function WebPageManagementTab() {
             <CardContent>
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {reviews.map((review) => (
-                  <Card key={review.id} className="border-2 border-primary/10 overflow-hidden">
+                  <Card key={review.id} className="border-2 border-violet-500/10 overflow-hidden">
                     <div className="relative h-64">
                       {review.image ? (
                         <Image
@@ -4664,14 +4729,14 @@ function HubInformationManagement() {
   const [editingHub, setEditingHub] = useState<number | null>(null);
 
   return (
-    <Card className="border-2 border-primary/20 shadow-xl">
+    <Card className="border-2 border-violet-300/30 shadow-xl">
       <CardHeader>
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
             <CardTitle className="text-2xl">Hub Information</CardTitle>
             <CardDescription>Manage hub locations and contact information</CardDescription>
           </div>
-          <Button className="bg-primary hover:bg-primary/90">
+          <Button className="bg-gradient-violet hover:opacity-90">
             <Plus className="w-4 h-4 mr-2" />
             Add Hub
           </Button>
@@ -4680,7 +4745,7 @@ function HubInformationManagement() {
       <CardContent>
         <div className="space-y-6">
           {hubs.map((hub) => (
-            <Card key={hub.id} className="border-2 border-primary/10">
+            <Card key={hub.id} className="border-2 border-violet-500/10">
               {editingHub === hub.id ? (
                 <HubEditForm hub={hub} onSave={() => setEditingHub(null)} onCancel={() => setEditingHub(null)} />
               ) : (
@@ -4702,28 +4767,28 @@ function HubInformationManagement() {
                   </div>
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="flex items-start gap-3">
-                      <MapPin className="w-5 h-5 text-primary mt-1" />
+                      <MapPin className="w-5 h-5 text-violet-600 mt-1" />
                       <div>
                         <p className="font-semibold">Address</p>
                         <p className="text-sm text-muted-foreground">{hub.address}</p>
                       </div>
                     </div>
                     <div className="flex items-start gap-3">
-                      <Mail className="w-5 h-5 text-primary mt-1" />
+                      <Mail className="w-5 h-5 text-violet-600 mt-1" />
                       <div>
                         <p className="font-semibold">Email</p>
                         <p className="text-sm text-muted-foreground">{hub.email}</p>
                       </div>
                     </div>
                     <div className="flex items-start gap-3">
-                      <Phone className="w-5 h-5 text-primary mt-1" />
+                      <Phone className="w-5 h-5 text-violet-600 mt-1" />
                       <div>
                         <p className="font-semibold">Phone</p>
                         <p className="text-sm text-muted-foreground">{hub.phone}</p>
                       </div>
                     </div>
                     <div className="flex items-start gap-3">
-                      <Clock className="w-5 h-5 text-primary mt-1" />
+                      <Clock className="w-5 h-5 text-violet-600 mt-1" />
                       <div>
                         <p className="font-semibold">Operating Time</p>
                         <p className="text-sm text-muted-foreground">{hub.operatingTime}</p>
@@ -4803,7 +4868,7 @@ function HubEditForm({ hub, onSave, onCancel }: { hub: any; onSave: () => void; 
           </div>
         </div>
         <div className="flex gap-2 pt-4">
-          <Button onClick={onSave} className="bg-primary hover:bg-primary/90">
+          <Button onClick={onSave} className="bg-gradient-violet hover:opacity-90">
             <Save className="w-4 h-4 mr-2" />
             Save Changes
           </Button>
@@ -4832,7 +4897,7 @@ function SiteSettingsManagement() {
   });
 
   return (
-    <Card className="border-2 border-primary/20 shadow-xl">
+    <Card className="border-2 border-violet-300/30 shadow-xl">
       <CardHeader>
         <div>
           <CardTitle className="text-2xl">Site Settings</CardTitle>
@@ -4945,7 +5010,7 @@ function SiteSettingsManagement() {
           </div>
 
           <div className="flex gap-2 pt-4">
-            <Button className="bg-primary hover:bg-primary/90">
+            <Button className="bg-gradient-violet hover:opacity-90">
               <Save className="w-4 h-4 mr-2" />
               Save All Settings
             </Button>

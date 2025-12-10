@@ -1,0 +1,398 @@
+// Backend Implementation Prompt: Order/Shipment Tracking
+// ===================================================================
+// 
+// The frontend now searches for orders and shipments by tracking ID or order ID.
+// The backend needs to support a unified tracking endpoint that can find orders
+// or shipments by various identifiers.
+//
+// ===================================================================
+// 1. GET /api/orders/track/:identifier - Unified Tracking Endpoint
+// ===================================================================
+//
+// Endpoint: GET /api/orders/track/:identifier
+// Purpose: Find order or shipment by tracking ID, order number, or order ID
+//
+// URL Parameter: identifier
+//   - Can be: trackingId, orderNumber, orderId, batchNumber, or shipmentId
+//   - Examples: "NGE123456789", "ORD-1001", "693961b5de5490f09d361eb7"
+//
+// Expected Response:
+// {
+//   "success": true,
+//   "data": {
+//     "order": {
+//       "_id": "693961b5de5490f09d361eb7",
+//       "orderNumber": "ORD-1001",
+//       "status": "out_for_delivery",
+//       "customerId": {
+//         "_id": "...",
+//         "firstName": "John",
+//         "lastName": "Doe",
+//         "email": "john@example.com",
+//         "phone": "+1234567890",
+//         "address": "123 Main St, City, Country"
+//       },
+//       "departureDate": "2025-12-17T20:00:00.000Z",
+//       "items": [
+//         {
+//           "description": "Product Name",
+//           "quantity": 2,
+//           "weight": "1.5 kg"
+//         }
+//       ],
+//       "statusHistory": [
+//         {
+//           "status": "pending",
+//           "updatedAt": "2025-12-10T10:00:00.000Z",
+//           "notes": "Order created"
+//         },
+//         {
+//           "status": "out_for_delivery",
+//           "updatedAt": "2025-12-17T12:00:00.000Z",
+//           "notes": "Out for delivery"
+//         }
+//       ],
+//       "createdAt": "2025-12-10T10:00:00.000Z",
+//       "updatedAt": "2025-12-17T12:00:00.000Z"
+//     },
+//     "shipment": {
+//       "_id": "69396234ee63d31fcd1705fe",
+//       "trackingId": "NGE23007448",
+//       "batchNumber": "BCH-2025-001",
+//       "currentStatus": "In Transit",
+//       "status": "in_transit",
+//       "departureDate": "2025-12-17T20:00:00.000Z",
+//       "shipper": { ... },
+//       "receiver": { ... },
+//       "parcels": [ ... ],
+//       "history": [ ... ],
+//       "createdAt": "2025-12-10T12:06:12.119Z"
+//     }
+//   }
+// }
+//
+// Note: Response can include either "order" or "shipment" or both, depending
+// on what was found. If order is part of a shipment, include both.
+//
+// ===================================================================
+// 2. Search Logic
+// ===================================================================
+//
+// The endpoint should search in this order:
+// 1. Search orders by orderNumber (e.g., "ORD-1001")
+// 2. Search orders by _id (MongoDB ObjectId)
+// 3. Search shipments by trackingId (e.g., "NGE123456789")
+// 4. Search shipments by batchNumber (e.g., "BCH-2025-001")
+// 5. Search shipments by _id (MongoDB ObjectId)
+// 6. If order found, also check if it belongs to a shipment
+//
+// ===================================================================
+// 3. Implementation Example (Node.js/Express/Mongoose)
+// ===================================================================
+//
+// router.get('/orders/track/:identifier', async (req, res) => {
+//   try {
+//     const { identifier } = req.params;
+//     
+//     // Try to find as MongoDB ObjectId first
+//     let order = null;
+//     let shipment = null;
+//     const isObjectId = /^[0-9a-fA-F]{24}$/.test(identifier);
+//     
+//     // Search orders
+//     if (isObjectId) {
+//       // Try as order ID
+//       order = await Order.findById(identifier)
+//         .populate('customerId', 'firstName lastName email phone address')
+//         .lean();
+//     }
+//     
+//     if (!order) {
+//       // Try as orderNumber
+//       order = await Order.findOne({ orderNumber: identifier })
+//         .populate('customerId', 'firstName lastName email phone address')
+//         .lean();
+//     }
+//     
+//     // If order found, check if it belongs to a shipment
+//     if (order) {
+//       shipment = await Shipment.findOne({
+//         $or: [
+//           { orderIds: order._id },
+//           { orders: order._id }
+//         ]
+//       })
+//         .populate('shipper', 'firstName lastName email phone address')
+//         .populate('receiver', 'firstName lastName email phone address')
+//         .populate('orders', 'orderNumber status')
+//         .lean();
+//     }
+//     
+//     // Search shipments if order not found
+//     if (!shipment) {
+//       if (isObjectId) {
+//         shipment = await Shipment.findById(identifier)
+//           .populate('shipper', 'firstName lastName email phone address')
+//           .populate('receiver', 'firstName lastName email phone address')
+//           .populate('orders', 'orderNumber status')
+//           .lean();
+//       }
+//       
+//       if (!shipment) {
+//         shipment = await Shipment.findOne({
+//           $or: [
+//             { trackingId: identifier },
+//             { batchNumber: identifier }
+//           ]
+//         })
+//           .populate('shipper', 'firstName lastName email phone address')
+//           .populate('receiver', 'firstName lastName email phone address')
+//           .populate('orders', 'orderNumber status')
+//           .lean();
+//       }
+//     }
+//     
+//     // If nothing found
+//     if (!order && !shipment) {
+//       return res.status(404).json({
+//         success: false,
+//         error: {
+//           code: 'NOT_FOUND',
+//           message: 'Order or shipment not found with the provided identifier'
+//         }
+//       });
+//     }
+//     
+//     // Return found data
+//     res.json({
+//       success: true,
+//       data: {
+//         ...(order && { order }),
+//         ...(shipment && { shipment })
+//       }
+//     });
+//     
+//   } catch (error) {
+//     console.error('Error tracking order/shipment:', error);
+//     res.status(500).json({
+//       success: false,
+//       error: {
+//         code: 'SERVER_ERROR',
+//         message: error.message
+//       }
+//     });
+//   }
+// });
+//
+// ===================================================================
+// 4. Order Model - Required Fields for Tracking
+// ===================================================================
+//
+// Order should have these fields:
+// {
+//   _id: ObjectId,
+//   orderNumber: String (unique, indexed), // e.g., "ORD-1001"
+//   status: String,
+//   customerId: ObjectId (ref: 'Customer'),
+//   departureDate: Date,
+//   items: [{
+//     description: String,
+//     quantity: Number,
+//     weight: String (optional)
+//   }],
+//   statusHistory: [{
+//     status: String,
+//     updatedAt: Date,
+//     notes: String (optional),
+//     updatedBy: ObjectId (optional)
+//   }],
+//   createdAt: Date,
+//   updatedAt: Date
+// }
+//
+// Indexes for performance:
+// orderSchema.index({ orderNumber: 1 }); // Unique index
+// orderSchema.index({ status: 1 });
+//
+// ===================================================================
+// 5. Shipment Model - Required Fields for Tracking
+// ===================================================================
+//
+// Shipment should have these fields:
+// {
+//   _id: ObjectId,
+//   trackingId: String (unique, indexed), // e.g., "NGE123456789"
+//   batchNumber: String (indexed), // e.g., "BCH-2025-001"
+//   currentStatus: String,
+//   status: String,
+//   departureDate: Date,
+//   shipper: ObjectId (ref: 'Customer') or embedded object,
+//   receiver: ObjectId (ref: 'Customer') or embedded object,
+//   orderIds: [ObjectId] (ref: 'Order'),
+//   orders: [ObjectId] (ref: 'Order'), // Alternative field name
+//   parcels: [{
+//     items: String,
+//     weight: String
+//   }],
+//   history: [{
+//     status: String,
+//     location: String (optional),
+//     notes: String (optional),
+//     timestamp: Date
+//   }],
+//   createdAt: Date,
+//   updatedAt: Date
+// }
+//
+// Indexes for performance:
+// shipmentSchema.index({ trackingId: 1 }); // Unique index
+// shipmentSchema.index({ batchNumber: 1 });
+// shipmentSchema.index({ orderIds: 1 });
+//
+// ===================================================================
+// 6. Response Format Details
+// ===================================================================
+//
+// Order Response Should Include:
+// - All order fields
+// - Populated customerId with: firstName, lastName, email, phone, address
+// - statusHistory array (if available)
+// - items array with full details
+//
+// Shipment Response Should Include:
+// - All shipment fields
+// - Populated shipper and receiver (or embedded objects)
+// - Populated orders array (if using references)
+// - history array with all status updates
+// - parcels array with full details
+//
+// ===================================================================
+// 7. Error Handling
+// ===================================================================
+//
+// Handle these cases:
+// - Identifier not found: 404
+//   {
+//     "success": false,
+//     "error": {
+//       "code": "NOT_FOUND",
+//       "message": "Order or shipment not found with the provided identifier"
+//     }
+//   }
+//
+// - Invalid identifier format: 400
+//   {
+//     "success": false,
+//     "error": {
+//       "code": "INVALID_IDENTIFIER",
+//       "message": "Invalid tracking identifier format"
+//     }
+//   }
+//
+// - Server errors: 500
+//   {
+//     "success": false,
+//     "error": {
+//       "code": "SERVER_ERROR",
+//       "message": "Internal server error"
+//     }
+//   }
+//
+// ===================================================================
+// 8. Performance Optimization
+// ===================================================================
+//
+// 1. Add indexes on searchable fields:
+//    - Order: orderNumber (unique)
+//    - Shipment: trackingId (unique), batchNumber
+//
+// 2. Use lean() queries when returning data:
+//    .lean()
+//
+// 3. Only populate necessary fields:
+//    .populate('customerId', 'firstName lastName email phone address')
+//
+// 4. Consider caching frequently accessed tracking data (optional)
+//
+// ===================================================================
+// 9. Security Considerations
+// ===================================================================
+//
+// - This endpoint should be PUBLIC (no authentication required)
+// - Anyone with a tracking ID should be able to view order/shipment status
+// - Do NOT return sensitive information:
+//   - Internal notes
+//   - Cost/pricing information
+//   - Internal status codes
+//   - User passwords or tokens
+//
+// - Only return customer-facing information:
+//   - Order status
+//   - Tracking history
+//   - Delivery dates
+//   - Customer name and address (for verification)
+//
+// ===================================================================
+// 10. Testing Checklist
+// ===================================================================
+//
+// Test these scenarios:
+// ✓ Search by orderNumber: GET /api/orders/track/ORD-1001
+// ✓ Search by order ID: GET /api/orders/track/693961b5de5490f09d361eb7
+// ✓ Search by trackingId: GET /api/orders/track/NGE123456789
+// ✓ Search by batchNumber: GET /api/orders/track/BCH-2025-001
+// ✓ Search by shipment ID: GET /api/orders/track/69396234ee63d31fcd1705fe
+// ✓ Returns order with populated customerId
+// ✓ Returns shipment with populated shipper/receiver
+// ✓ Returns both order and shipment if order belongs to shipment
+// ✓ Returns 404 for invalid identifier
+// ✓ Handles case-insensitive search (optional)
+// ✓ Returns proper error for malformed ObjectId
+// ✓ Performance: Response time < 500ms for indexed searches
+//
+// ===================================================================
+// 11. Alternative: Separate Endpoints (If Preferred)
+// ===================================================================
+//
+// If you prefer separate endpoints:
+//
+// GET /api/orders/track/:orderNumber
+//   - Search orders only by orderNumber or orderId
+//
+// GET /api/shipments/track/:trackingId
+//   - Search shipments only by trackingId, batchNumber, or shipmentId
+//
+// Then frontend can try both endpoints sequentially.
+//
+// ===================================================================
+// Summary
+// ===================================================================
+//
+// The frontend sends: GET /api/orders/track/:identifier
+// Where identifier can be:
+//   - Order number (e.g., "ORD-1001")
+//   - Order ID (MongoDB ObjectId)
+//   - Tracking ID (e.g., "NGE123456789")
+//   - Batch number (e.g., "BCH-2025-001")
+//   - Shipment ID (MongoDB ObjectId)
+//
+// Backend should:
+// 1. Search orders by orderNumber or _id
+// 2. Search shipments by trackingId, batchNumber, or _id
+// 3. If order found, also find associated shipment
+// 4. Return both order and shipment if both found
+// 5. Populate all related data (customer, shipper, receiver, etc.)
+// 6. Return 404 if nothing found
+// 7. Return proper error responses for invalid requests
+//
+// Response format:
+// {
+//   "success": true,
+//   "data": {
+//     "order": { ... },  // Optional, if order found
+//     "shipment": { ... } // Optional, if shipment found
+//   }
+// }
+//
+// ===================================================================
+

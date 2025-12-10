@@ -1,0 +1,57 @@
+Backend prompt: Align roles & permissions with frontend
+------------------------------------------------------
+Context:
+- Frontend shows all roles returned by GET /roles and lets admins edit permissions via PUT /roles/:id { permissions: string[] }.
+- Frontend relies on consistent permission strings (order:create, order:modify, order:delete, order:view, shipment:status_update, shipment:bulk_update, shipment:view, user:create, user:modify, user:delete, user:view, frontend:edit, frontend:reviews, settings:modify).
+- Role names are taken directly from backend now (no frontend normalization). Keep a stable name field; avoid duplicates with different casing.
+
+What to implement/verify in backend:
+1) GET /roles
+   - Return all roles.
+   - Each role should include: _id, name, permissions: string[]
+   - Keep name stable; avoid duplicates differing by case/spaces.
+
+2) PUT /roles/:id
+   - Body: { permissions: string[] }
+   - Validate: only allow known permission keys (see list above). Reject or ignore unknowns.
+   - Persist permissions array on the role document.
+   - Respond with { success: true, data: updatedRole }.
+
+3) Permissions source of truth
+   - Store the canonical permission strings in backend (same as list above).
+   - On login, include user.role and user.permissions (or roleId with populated permissions) so frontend can gate features accurately.
+
+4) Driver-specific defaults (optional but recommended to match current UI intent):
+   - Driver should have: shipment:view, shipment:status_update, settings:modify, order:view
+   - (If you want to restrict driver order updates, omit order:modify.)
+
+5) Auth middleware
+   - Protect PUT /roles/:id to admin/super-admin only.
+   - Protect GET /roles to users with user:view.
+
+6) Consistency
+   - Ensure role names are stored in a consistent field (e.g., name).
+   - If you support displayName, also return name for programmatic checks.
+
+Example Mongoose-style update (Express):
+```js
+router.put('/roles/:id', requirePermission('user:modify'), async (req, res) => {
+  const { permissions = [] } = req.body;
+  const allowed = new Set([
+    'order:create','order:modify','order:delete','order:view',
+    'shipment:status_update','shipment:bulk_update','shipment:view',
+    'user:create','user:modify','user:delete','user:view',
+    'frontend:edit','frontend:reviews','settings:modify',
+  ]);
+  const filtered = permissions.filter(p => allowed.has(p));
+
+  const role = await Role.findByIdAndUpdate(
+    req.params.id,
+    { $set: { permissions: filtered } },
+    { new: true }
+  );
+  if (!role) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Role not found' } });
+  res.json({ success: true, data: role });
+});
+```
+

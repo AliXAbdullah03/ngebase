@@ -30,6 +30,9 @@ export function UserForm({ user, onSave, onCancel }: UserFormProps) {
   const [roles, setRoles] = useState<any[]>([]);
   const [branches, setBranches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedRoleName, setSelectedRoleName] = useState<string>(() => {
+    return (user?.roleId?.name || user?.roleId || user?.role?.name || user?.role) || '';
+  });
 
   // Fetch roles and branches
   useEffect(() => {
@@ -169,63 +172,16 @@ export function UserForm({ user, onSave, onCancel }: UserFormProps) {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="firstName">First Name</Label>
-              <Input
-                id="firstName"
-                value={formData.firstName}
-                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="lastName">Last Name</Label>
-              <Input
-                id="lastName"
-                value={formData.lastName}
-                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                required
-              />
-            </div>
-          </div>
-
-          <div>
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              required
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="password">{user ? 'New Password (leave blank to keep current)' : 'Password'}</Label>
-            <Input
-              id="password"
-              type="password"
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              required={!user}
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="phone">Phone</Label>
-            <Input
-              id="phone"
-              value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-            />
-          </div>
-
           <div>
             <Label htmlFor="roleId">Role</Label>
             <Select
               value={formData.roleId}
-              onValueChange={(value) => setFormData({ ...formData, roleId: value })}
+              onValueChange={(value) => {
+                const roleObj = roles.find(r => (r.id || r._id) === value);
+                const roleName = roleObj?.name || roleObj?.displayName || '';
+                setSelectedRoleName(roleName);
+                setFormData({ ...formData, roleId: value });
+              }}
               disabled={loading}
             >
               <SelectTrigger>
@@ -281,6 +237,59 @@ export function UserForm({ user, onSave, onCancel }: UserFormProps) {
                 }).filter(Boolean)}
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="firstName">First Name</Label>
+              <Input
+                id="firstName"
+                value={formData.firstName}
+                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="lastName">Last Name</Label>
+              <Input
+                id="lastName"
+                value={formData.lastName}
+                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              required
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="password">{user ? 'New Password (leave blank to keep current)' : 'Password'}</Label>
+            <Input
+              id="password"
+              type="password"
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              required={!user}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="phone">Phone {selectedRoleName === 'Driver' ? '(optional for driver)' : ''}</Label>
+            <Input
+              id="phone"
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              required={selectedRoleName !== 'Driver'}
+            />
           </div>
 
           <div className="flex gap-2 pt-4">

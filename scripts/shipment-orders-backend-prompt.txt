@@ -1,0 +1,243 @@
+// Backend Implementation Prompt: Shipment Orders Real-Time Fetching
+// ===================================================================
+// 
+// The frontend now fetches order details in real-time when users expand
+// a shipment to view its orders. The backend needs to support the following:
+//
+// ===================================================================
+// 1. GET /api/shipments/:id - Fetch Single Shipment with Orders
+// ===================================================================
+//
+// Endpoint: GET /api/shipments/:id
+// Purpose: Return a single shipment with its associated orders populated
+//
+// Expected Response Structure:
+// {
+//   "success": true,
+//   "data": {
+//     "_id": "69396234ee63d31fcd1705fe",
+//     "trackingId": "NGE23007448",
+//     "batchNumber": "BCH-2025-001",
+//     "departureDate": "2025-12-17T20:00:00.000Z",
+//     "currentStatus": "In Transit",
+//     "status": "in_transit",
+//     "orderIds": ["693961b5de5490f09d361eb7", "6939662bee63d31fcd170648"],
+//     "orders": [
+//       {
+//         "_id": "693961b5de5490f09d361eb7",
+//         "orderNumber": "ORD-1001",
+//         "status": "pending",
+//         "customerId": {...},
+//         // ... other order fields
+//       },
+//       {
+//         "_id": "6939662bee63d31fcd170648",
+//         "orderNumber": "ORD-1002",
+//         "status": "pending",
+//         // ... other order fields
+//       }
+//     ],
+//     // ... other shipment fields
+//   }
+// }
+//
+// Implementation Notes:
+// - Populate the 'orders' field when fetching a single shipment
+// - Include 'orderNumber' and 'status' fields in populated orders
+// - If orders are not populated, frontend will fetch each order individually
+//
+// Example (Mongoose):
+// const shipment = await Shipment.findById(shipmentId)
+//   .populate({
+//     path: 'orders',
+//     select: 'orderNumber status customerId departureDate items',
+//     // Or if using orderIds:
+//     // path: 'orderIds',
+//     // select: 'orderNumber status customerId departureDate items'
+//   })
+//   .lean();
+//
+// ===================================================================
+// 2. GET /api/orders/:id - Fetch Single Order Details
+// ===================================================================
+//
+// Endpoint: GET /api/orders/:id
+// Purpose: Return full order details including orderNumber
+//
+// Expected Response Structure:
+// {
+//   "success": true,
+//   "data": {
+//     "_id": "693961b5de5490f09d361eb7",
+//     "orderNumber": "ORD-1001",
+//     "status": "pending",
+//     "customerId": {
+//       "_id": "...",
+//       "firstName": "John",
+//       "lastName": "Doe"
+//     },
+//     "departureDate": "2025-12-17T20:00:00.000Z",
+//     "items": [...],
+//     // ... other order fields
+//   }
+// }
+//
+// Implementation Notes:
+// - Must include 'orderNumber' field (required for display)
+// - Must include 'status' field (required for display)
+// - Populate customerId if it's a reference
+//
+// Example (Mongoose):
+// const order = await Order.findById(orderId)
+//   .populate('customerId', 'firstName lastName email phone')
+//   .lean();
+//
+// ===================================================================
+// 3. Shipment Model - Orders Population
+// ===================================================================
+//
+// Ensure your Shipment model supports order population:
+//
+// Option A: Using 'orders' array (populated references)
+// const shipmentSchema = new Schema({
+//   // ... other fields
+//   orders: [{
+//     type: Schema.Types.ObjectId,
+//     ref: 'Order'
+//   }],
+//   orderIds: [{
+//     type: Schema.Types.ObjectId,
+//     ref: 'Order'
+//   }]
+// });
+//
+// Option B: Using 'orderIds' array (IDs only, populate when needed)
+// - Frontend will fetch each order individually if not populated
+//
+// ===================================================================
+// 4. Order Model - Required Fields
+// ===================================================================
+//
+// Ensure Order model has these fields:
+// const orderSchema = new Schema({
+//   orderNumber: {
+//     type: String,
+//     required: true,
+//     unique: true,
+//     // Format: "ORD-1001", "ORD-1002", etc.
+//   },
+//   status: {
+//     type: String,
+//     enum: ['pending', 'processing', 'confirmed', 'in_transit', 
+//            'out_for_delivery', 'delivered', 'completed', 'cancelled'],
+//     default: 'pending'
+//   },
+//   customerId: {
+//     type: Schema.Types.ObjectId,
+//     ref: 'Customer',
+//     required: true
+//   },
+//   // ... other fields
+// });
+//
+// ===================================================================
+// 5. Performance Optimization
+// ===================================================================
+//
+// For better performance, populate orders when fetching shipments:
+//
+// GET /api/shipments (list endpoint):
+// - Optionally populate orders (but may be heavy for large lists)
+// - Frontend handles fetching individual shipment orders when expanded
+//
+// GET /api/shipments/:id (single shipment):
+// - ALWAYS populate orders with orderNumber and status
+// - This prevents frontend from making multiple individual requests
+//
+// Example optimized endpoint:
+// router.get('/shipments/:id', async (req, res) => {
+//   try {
+//     const shipment = await Shipment.findById(req.params.id)
+//       .populate({
+//         path: 'orders',
+//         select: 'orderNumber status customerId departureDate',
+//         populate: {
+//           path: 'customerId',
+//           select: 'firstName lastName email'
+//         }
+//       })
+//       .lean();
+//
+//     if (!shipment) {
+//       return res.status(404).json({
+//         success: false,
+//         error: { code: 'NOT_FOUND', message: 'Shipment not found' }
+//       });
+//     }
+//
+//     res.json({ success: true, data: shipment });
+//   } catch (error) {
+//     res.status(500).json({
+//       success: false,
+//       error: { code: 'SERVER_ERROR', message: error.message }
+//     });
+//   }
+// });
+//
+// ===================================================================
+// 6. Error Handling
+// ===================================================================
+//
+// Handle these cases:
+// - Shipment not found: 404 with { success: false, error: { code: 'NOT_FOUND', ... } }
+// - Order not found: 404 with { success: false, error: { code: 'NOT_FOUND', ... } }
+// - Invalid shipment ID: 400 with { success: false, error: { code: 'INVALID_ID', ... } }
+// - Server errors: 500 with { success: false, error: { code: 'SERVER_ERROR', ... } }
+//
+// ===================================================================
+// 7. Authentication & Authorization
+// ===================================================================
+//
+// Both endpoints should:
+// - Require authentication (Bearer token)
+// - Check user permissions if needed
+// - Return 401 if unauthorized
+// - Return 403 if user lacks permission
+//
+// ===================================================================
+// 8. Testing Checklist
+// ===================================================================
+//
+// Test these scenarios:
+// ✓ GET /api/shipments/:id returns shipment with populated orders
+// ✓ GET /api/shipments/:id returns orders with orderNumber field
+// ✓ GET /api/shipments/:id returns orders with status field
+// ✓ GET /api/orders/:id returns order with orderNumber
+// ✓ GET /api/orders/:id returns order with status
+// ✓ Handle shipment with no orders (empty array)
+// ✓ Handle shipment with orderIds but orders not populated
+// ✓ Handle invalid shipment ID
+// ✓ Handle invalid order ID
+// ✓ Authentication required for both endpoints
+//
+// ===================================================================
+// Summary
+// ===================================================================
+//
+// The frontend expects:
+// 1. GET /api/shipments/:id to return shipment with populated orders
+//    - Each order must have 'orderNumber' (e.g., "ORD-1001")
+//    - Each order must have 'status' (e.g., "pending")
+//
+// 2. GET /api/orders/:id to return full order details
+//    - Must include 'orderNumber' field
+//    - Must include 'status' field
+//
+// 3. If orders are not populated in shipment response, frontend will
+//    fetch each order individually using GET /api/orders/:id
+//
+// 4. Both endpoints should follow the standard response format:
+//    { success: true, data: {...} } or { success: false, error: {...} }
+//
+// ===================================================================
+

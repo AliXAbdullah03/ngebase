@@ -1,0 +1,61 @@
+Backend prompt: Driver status & visibility rules
+------------------------------------------------
+Goal:
+- Allow Drivers to update shipment status but only see shipments that are "out_for_delivery".
+- Driver updates should persist to DB (status/currentStatus + history entry).
+- Driver can modify hubs/settings (grant appropriate permission).
+
+Suggested API behaviors:
+1) GET /shipments:
+   - If requester role == Driver, filter server-side to shipments where currentStatus/status == "out_for_delivery".
+   - Include trackingId, currentStatus, orderIds, departureDate, history.
+
+2) PUT /shipments/:id
+   - Payload: { status, notes?, location? }
+   - Validate: if requester role == Driver, allow status transitions only from out_for_delivery -> delivered (optionally permit staying out_for_delivery).
+   - Update:
+     currentStatus = status
+     status = status
+     updatedAt = now
+     push to history: { status, notes: notes||'', location: location||'', timestamp: now, userId }
+   - Return updated shipment document.
+
+3) Permissions:
+   - Role "Driver" should have: shipment:view, shipment:status_update, settings:modify (for hubs/settings), but NOT order:view.
+   - Enforce in middleware before handlers.
+
+Example Mongoose handler (Express):
+```js
+router.put('/shipments/:id', requireAuth, async (req, res) => {
+  const { status, notes = '', location = '' } = req.body;
+  const isDriver = req.user?.role === 'Driver';
+
+  // Validate status transitions for driver
+  if (isDriver) {
+    const allowed = ['out_for_delivery', 'delivered'];
+    if (!allowed.includes(status)) {
+      return res.status(403).json({ success: false, error: { code: 'FORBIDDEN', message: 'Drivers can only set delivered' } });
+    }
+  }
+
+  const shipment = await Shipment.findById(req.params.id);
+  if (!shipment) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Shipment not found' } });
+
+  // If driver, ensure current status is out_for_delivery before allowing delivered
+  if (isDriver && shipment.currentStatus !== 'out_for_delivery' && status === 'delivered') {
+    return res.status(403).json({ success: false, error: { code: 'FORBIDDEN', message: 'Only out-for-delivery shipments can be completed by driver' } });
+  }
+
+  shipment.currentStatus = status;
+  shipment.status = status;
+  shipment.updatedAt = new Date();
+  shipment.history.push({ status, notes, location, timestamp: new Date(), userId: req.user.id });
+  await shipment.save();
+
+  return res.json({ success: true, data: shipment });
+});
+```
+
+4) (Optional) Unique filter:
+   - Ensure GET /shipments for driver also returns only necessary fields to minimize payload.
+

@@ -22,8 +22,8 @@ const services = [
     icon: Ship,
     href: '/services/ocean-freight',
     features: ['Bulk Shipping', 'Cost Effective', 'Secure Handling'],
-    gradient: 'from-primary/20 to-blue-500/20',
-    iconColor: 'text-primary'
+    gradient: 'from-violet-500/20 to-purple-500/20',
+    iconColor: 'text-violet-600'
   },
   {
     id: 3,
@@ -41,7 +41,7 @@ const features = [
   { icon: Zap, text: 'Lightning Fast', color: 'text-yellow-500' },
   { icon: Shield, text: '100% Secure', color: 'text-green-500' },
   { icon: Clock, text: 'On-Time Delivery', color: 'text-blue-500' },
-  { icon: Globe, text: 'Worldwide Network', color: 'text-primary' }
+  { icon: Globe, text: 'Worldwide Network', color: 'text-violet-600' }
 ];
 
 export function EnhancedServices() {
@@ -58,7 +58,7 @@ export function EnhancedServices() {
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-16 animate-fade-in">
           <h2 className="text-4xl md:text-5xl font-bold mb-4">
-            Our <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">Services</span>
+            Our <span className="bg-gradient-to-r from-violet-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">Services</span>
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
             Comprehensive logistics solutions tailored to your business needs
@@ -72,7 +72,7 @@ export function EnhancedServices() {
             return (
               <div 
                 key={index}
-                className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 hover:bg-primary/20 transition-colors cursor-default"
+                className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-violet-100 to-purple-100 hover:from-violet-200 hover:to-purple-200 transition-colors cursor-default"
                 style={{ animation: `fadeIn 0.6s ease-out ${index * 0.1}s both` }}
               >
                 <Icon className={`w-5 h-5 ${feature.color}`} />
@@ -92,20 +92,20 @@ export function EnhancedServices() {
                 className="group"
                 style={{ animation: `fadeIn 0.8s ease-out ${index * 0.15}s both` }}
               >
-                <Card className="h-full border-2 hover:border-primary/50 transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 overflow-hidden relative bg-white">
+                <Card className="h-full border-2 hover:border-violet-500/50 transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 overflow-hidden relative bg-white">
                   {/* Gradient Background on Hover */}
                   <div className={`absolute inset-0 bg-gradient-to-br ${service.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}></div>
                   
                   <CardContent className="p-8 relative z-10">
                     {/* Icon */}
                     <div className="mb-6">
-                      <div className="inline-flex p-4 rounded-2xl bg-primary/10 group-hover:bg-primary/20 transition-all duration-300 group-hover:scale-110">
+                      <div className="inline-flex p-4 rounded-2xl bg-gradient-to-br from-violet-100 to-purple-100 group-hover:from-violet-200 group-hover:to-purple-200 transition-all duration-300 group-hover:scale-110">
                         <Icon className={`w-10 h-10 ${service.iconColor} group-hover:rotate-12 transition-transform duration-300`} />
                       </div>
                     </div>
 
                     {/* Content */}
-                    <h3 className="text-2xl font-bold mb-3 group-hover:text-primary transition-colors">
+                    <h3 className="text-2xl font-bold mb-3 group-hover:bg-gradient-to-r group-hover:from-violet-600 group-hover:to-purple-600 group-hover:bg-clip-text group-hover:text-transparent transition-all">
                       {service.title}
                     </h3>
                     <p className="text-muted-foreground mb-6 leading-relaxed">
@@ -116,16 +116,16 @@ export function EnhancedServices() {
                     <ul className="space-y-2 mb-6">
                       {service.features.map((feature, idx) => (
                         <li key={idx} className="flex items-center gap-2 text-sm">
-                          <div className="w-1.5 h-1.5 rounded-full bg-primary group-hover:scale-150 transition-transform"></div>
+                          <div className="w-1.5 h-1.5 rounded-full bg-gradient-violet group-hover:scale-150 transition-transform"></div>
                           <span className="text-muted-foreground group-hover:text-foreground transition-colors">{feature}</span>
                         </li>
                       ))}
                     </ul>
 
                     {/* CTA */}
-                    <div className="flex items-center gap-2 text-primary font-semibold group-hover:gap-4 transition-all">
+                    <div className="flex items-center gap-2 bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent font-semibold group-hover:gap-4 transition-all">
                       <span>Learn More</span>
-                      <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
+                      <ArrowRight className="w-5 h-5 text-violet-600 group-hover:translate-x-2 transition-transform" />
                     </div>
                   </CardContent>
                 </Card>

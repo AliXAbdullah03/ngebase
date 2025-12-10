@@ -1,0 +1,589 @@
+// Backend Implementation Prompt: Driver Order Status Update - Database Persistence
+// ===================================================================
+// 
+// IMPORTANT: When drivers update order status in the frontend, the changes
+// MUST be persisted to the database immediately. This prompt ensures proper
+// database updates and data consistency.
+//
+// Drivers can now update order status in the frontend. The backend needs
+// to support order status updates with proper validation for driver role
+// and ensure all changes are saved to the database.
+//
+// ===================================================================
+// 1. PUT /api/orders/:id/status - Update Order Status in Database
+// ===================================================================
+//
+// Endpoint: PUT /api/orders/:id/status
+// Purpose: Update the status of a specific order IN THE DATABASE
+//
+// Request Body:
+// {
+//   "status": "delivered" // or "out_for_delivery"
+// }
+//
+// Database Operation Required:
+// - Find order by ID in database
+// - Update order.status field in database
+// - Save changes to database (Mongoose: order.save() or Order.updateOne())
+// - Return updated order from database
+//
+// Expected Response:
+// {
+//   "success": true,
+//   "data": {
+//     "_id": "693961b5de5490f09d361eb7",
+//     "orderNumber": "ORD-1001",
+//     "status": "delivered", // MUST match what was saved to database
+//     "updatedAt": "2025-12-10T15:30:00.000Z", // MUST be updated
+//     // ... other order fields
+//   }
+// }
+//
+// ===================================================================
+// 2. Role-Based Status Validation
+// ===================================================================
+//
+// Drivers should only be able to update orders to:
+// - "out_for_delivery"
+// - "delivered"
+//
+// Other roles (Admin, Super Admin) can update to any valid status.
+//
+// Implementation:
+// - Check user role from authentication token
+// - Validate status value based on user role
+// - Return 403 if driver tries to set invalid status
+//
+// ===================================================================
+// 3. Implementation Example (Node.js/Express/Mongoose)
+// ===================================================================
+//
+// router.put('/orders/:id/status', authenticate, async (req, res) => {
+//   try {
+//     const { status } = req.body;
+//     const { id } = req.params;
+//     const user = req.user; // From authentication middleware
+//     
+//     // Validate status value
+//     const validStatuses = [
+//       'pending',
+//       'processing',
+//       'confirmed',
+//       'in_transit',
+//       'out_for_delivery',
+//       'delivered',
+//       'completed',
+//       'cancelled'
+//     ];
+//     
+//     // Normalize status for comparison
+//     const normalizeStatus = (s: string) => 
+//       s.toLowerCase().replace(/[_\s-]/g, '');
+//     
+//     const normalizedStatus = normalizeStatus(status);
+//     const isValidStatus = validStatuses.some(s => 
+//       normalizeStatus(s) === normalizedStatus
+//     );
+//     
+//     if (!isValidStatus) {
+//       return res.status(400).json({
+//         success: false,
+//         error: {
+//           code: 'INVALID_STATUS',
+//           message: `Invalid status value: ${status}`
+//         }
+//       });
+//     }
+//     
+//     // Role-based validation for drivers
+//     if (user.role === 'Driver') {
+//       const driverAllowedStatuses = ['outfordelivery', 'delivered'];
+//       if (!driverAllowedStatuses.includes(normalizedStatus)) {
+//         return res.status(403).json({
+//           success: false,
+//           error: {
+//             code: 'PERMISSION_DENIED',
+//             message: 'Drivers can only update orders to "Out for Delivery" or "Delivered"'
+//           }
+//         });
+//       }
+//     }
+//     
+//     // Find and update order
+//     const order = await Order.findById(id);
+//     
+//     if (!order) {
+//       return res.status(404).json({
+//         success: false,
+//         error: {
+//           code: 'NOT_FOUND',
+//           message: 'Order not found'
+//         }
+//       });
+//     }
+//     
+//     // Optional: Validate status transition (e.g., can't go from delivered to pending)
+//     const currentStatus = normalizeStatus(order.status || 'pending');
+//     const newStatusNormalized = normalizedStatus;
+//     
+//     // Status transition validation (optional but recommended)
+//     const validTransitions: Record<string, string[]> = {
+//       'pending': ['processing', 'confirmed', 'cancelled'],
+//       'processing': ['confirmed', 'in_transit', 'cancelled'],
+//       'confirmed': ['in_transit', 'cancelled'],
+//       'intransit': ['outfordelivery', 'delivered'],
+//       'outfordelivery': ['delivered'],
+//       'delivered': ['completed'],
+//       'completed': [], // Terminal state
+//       'cancelled': [] // Terminal state
+//     };
+//     
+//     const allowedNextStatuses = validTransitions[currentStatus] || [];
+//     if (allowedNextStatuses.length > 0 && 
+//         !allowedNextStatuses.some(s => normalizeStatus(s) === newStatusNormalized)) {
+//       return res.status(400).json({
+//         success: false,
+//         error: {
+//           code: 'INVALID_TRANSITION',
+//           message: `Cannot transition from ${order.status} to ${status}`
+//         }
+//       });
+//     }
+//     
+//     // Update order status
+//     order.status = status; // Use the original status format from request
+//     order.updatedAt = new Date();
+//     
+//     // Add to status history (optional but recommended)
+//     if (!order.statusHistory) {
+//       order.statusHistory = [];
+//     }
+//     order.statusHistory.push({
+//       status: status,
+//       updatedBy: user.id,
+//       updatedAt: new Date(),
+//       notes: `Status updated by ${user.role}`
+//     });
+//     
+//     await order.save();
+//     
+//     // Populate customer for response
+//     await order.populate('customerId', 'firstName lastName email phone');
+//     
+//     res.json({
+//       success: true,
+//       data: order
+//     });
+//   } catch (error) {
+//     console.error('Error updating order status:', error);
+//     res.status(500).json({
+//       success: false,
+//       error: {
+//         code: 'SERVER_ERROR',
+//         message: error.message
+//       }
+//     });
+//   }
+// });
+//
+// ===================================================================
+// 4. Order Model - Status History (Optional but Recommended)
+// ===================================================================
+//
+// Add status history tracking to Order model:
+//
+// const orderSchema = new Schema({
+//   // ... other fields
+//   status: {
+//     type: String,
+//     enum: [
+//       'pending',
+//       'processing',
+//       'confirmed',
+//       'in_transit',
+//       'out_for_delivery',
+//       'delivered',
+//       'completed',
+//       'cancelled'
+//     ],
+//     default: 'pending',
+//     index: true
+//   },
+//   statusHistory: [{
+//     status: String,
+//     updatedBy: {
+//       type: Schema.Types.ObjectId,
+//       ref: 'User'
+//     },
+//     updatedAt: Date,
+//     notes: String
+//   }],
+//   // ... other fields
+// });
+//
+// ===================================================================
+// 5. Status Transition Rules
+// ===================================================================
+//
+// Recommended status flow:
+// pending → processing → confirmed → in_transit → out_for_delivery → delivered → completed
+//
+// Drivers can update:
+// - in_transit → out_for_delivery
+// - out_for_delivery → delivered
+//
+// Terminal states (cannot be changed):
+// - completed
+// - cancelled
+//
+// ===================================================================
+// 6. Error Handling
+// ===================================================================
+//
+// Handle these cases:
+// - Order not found: 404
+// - Invalid status value: 400
+// - Invalid status transition: 400
+// - Driver trying to set invalid status: 403
+// - Authentication required: 401
+// - Permission denied: 403
+// - Server errors: 500
+//
+// Example error responses:
+// {
+//   "success": false,
+//   "error": {
+//     "code": "PERMISSION_DENIED",
+//     "message": "Drivers can only update orders to 'Out for Delivery' or 'Delivered'"
+//   }
+// }
+//
+// {
+//   "success": false,
+//   "error": {
+//     "code": "INVALID_TRANSITION",
+//     "message": "Cannot transition from 'delivered' to 'pending'"
+//   }
+// }
+//
+// ===================================================================
+// 7. Authentication & Authorization
+// ===================================================================
+//
+// Requirements:
+// - Endpoint requires authentication (Bearer token)
+// - Extract user role from token
+// - Validate user has permission to update orders
+// - For drivers, restrict to allowed statuses only
+//
+// ===================================================================
+// 8. Testing Checklist
+// ===================================================================
+//
+// Test these scenarios:
+// ✓ Driver can update order to "out_for_delivery"
+// ✓ Driver can update order to "delivered"
+// ✓ Driver cannot update order to "pending" (403)
+// ✓ Driver cannot update order to "completed" (403)
+// ✓ Admin can update order to any valid status
+// ✓ Super Admin can update order to any valid status
+// ✓ Invalid status value returns 400
+// ✓ Invalid status transition returns 400
+// ✓ Order not found returns 404
+// ✓ Authentication required (401 if no token)
+// ✓ Status history is updated (if implemented)
+// ✓ Order updatedAt timestamp is updated
+//
+// ===================================================================
+// 9. Status Value Normalization
+// ===================================================================
+//
+// Handle different status formats:
+// - "out_for_delivery" (underscore)
+// - "out-for-delivery" (hyphen)
+// - "Out for Delivery" (spaces, capitalized)
+// - "outfordelivery" (no separators)
+//
+// Normalize all to a standard format (recommend: "out_for_delivery")
+//
+// ===================================================================
+// 10. Bulk Status Update (Optional Enhancement)
+// ===================================================================
+//
+// Consider adding endpoint for drivers to update multiple orders at once:
+// PUT /api/orders/bulk/status
+// {
+//   "orderIds": ["id1", "id2", "id3"],
+//   "status": "delivered"
+// }
+//
+// This would be useful when a driver delivers multiple orders in one trip.
+//
+// ===================================================================
+// 11. CRITICAL: Database Persistence Requirements
+// ===================================================================
+//
+// IMPORTANT: All status updates MUST be persisted to the database.
+// The following are required database operations:
+//
+// ===================================================================
+// 11.1. Required Database Operations
+// ===================================================================
+//
+// 1. Find the order in database:
+//    const order = await Order.findById(orderId);
+//    
+// 2. Update the status field:
+//    order.status = newStatus;
+//    order.updatedAt = new Date();
+//
+// 3. CRITICAL: Save to database (Mongoose):
+//    await order.save();
+//    
+//    OR using direct update (MongoDB/Mongoose):
+//    await Order.updateOne(
+//      { _id: orderId },
+//      { 
+//        $set: { 
+//          status: newStatus,
+//          updatedAt: new Date()
+//        }
+//      }
+//    );
+//
+// 4. Verify the update was saved:
+//    const updatedOrder = await Order.findById(orderId);
+//    if (updatedOrder.status !== newStatus) {
+//      throw new Error('Database update failed');
+//    }
+//
+// ===================================================================
+// 11.2. Complete Database Update Example
+// ===================================================================
+//
+// router.put('/orders/:id/status', authenticate, async (req, res) => {
+//   try {
+//     const { status } = req.body;
+//     const { id } = req.params;
+//     const user = req.user;
+//     
+//     // Step 1: Find order in database
+//     const order = await Order.findById(id);
+//     if (!order) {
+//       return res.status(404).json({
+//         success: false,
+//         error: { code: 'NOT_FOUND', message: 'Order not found' }
+//       });
+//     }
+//     
+//     // Step 2: Validate status (role-based validation)
+//     // ... validation code ...
+//     
+//     // Step 3: Update order in memory
+//     const oldStatus = order.status;
+//     order.status = status;
+//     order.updatedAt = new Date();
+//     
+//     // Step 4: CRITICAL - Save to database
+//     await order.save();
+//     
+//     // Step 5: Verify database update
+//     const verifyOrder = await Order.findById(id);
+//     if (!verifyOrder || verifyOrder.status !== status) {
+//       console.error('Database update verification failed', {
+//         orderId: id,
+//         expectedStatus: status,
+//         actualStatus: verifyOrder?.status
+//       });
+//       return res.status(500).json({
+//         success: false,
+//         error: {
+//           code: 'DATABASE_ERROR',
+//           message: 'Order status was not saved to database'
+//         }
+//       });
+//     }
+//     
+//     // Step 6: Log the change (for audit trail)
+//     console.log('Order status updated', {
+//       orderId: id,
+//       orderNumber: order.orderNumber,
+//       oldStatus: oldStatus,
+//       newStatus: status,
+//       updatedBy: user.id,
+//       updatedAt: new Date()
+//     });
+//     
+//     // Step 7: Return updated order from database
+//     await verifyOrder.populate('customerId');
+//     res.json({
+//       success: true,
+//       data: verifyOrder
+//     });
+//     
+//   } catch (error) {
+//     console.error('Error updating order status in database:', error);
+//     res.status(500).json({
+//       success: false,
+//       error: {
+//         code: 'DATABASE_ERROR',
+//         message: 'Failed to update order in database: ' + error.message
+//       }
+//     });
+//   }
+// });
+//
+// ===================================================================
+// 11.3. Alternative: Direct Database Update (updateOne)
+// ===================================================================
+//
+// If you prefer direct database updates without loading the document:
+//
+// const updateResult = await Order.updateOne(
+//   { _id: id },
+//   {
+//     $set: {
+//       status: status,
+//       updatedAt: new Date()
+//     },
+//     $push: {
+//       statusHistory: {
+//         status: status,
+//         updatedBy: user.id,
+//         updatedAt: new Date()
+//       }
+//     }
+//   }
+// );
+//
+// // Verify update was successful
+// if (updateResult.matchedCount === 0) {
+//   return res.status(404).json({
+//     success: false,
+//     error: { code: 'NOT_FOUND', message: 'Order not found' }
+//   });
+// }
+//
+// if (updateResult.modifiedCount === 0) {
+//   return res.status(400).json({
+//     success: false,
+//     error: { code: 'UPDATE_FAILED', message: 'Order status was not changed' }
+//   });
+// }
+//
+// // Fetch the updated order from database
+// const updatedOrder = await Order.findById(id)
+//   .populate('customerId');
+//
+// res.json({
+//   success: true,
+//   data: updatedOrder
+// });
+//
+// ===================================================================
+// 11.4. Database Transaction (Recommended for Critical Updates)
+// ===================================================================
+//
+// For critical updates, use database transactions to ensure data consistency:
+//
+// const session = await mongoose.startSession();
+// session.startTransaction();
+//
+// try {
+//   const order = await Order.findById(id).session(session);
+//   if (!order) {
+//     throw new Error('Order not found');
+//   }
+//   
+//   order.status = status;
+//   order.updatedAt = new Date();
+//   await order.save({ session });
+//   
+//   // Optional: Update related documents (e.g., shipment status)
+//   // await Shipment.updateOne(
+//   //   { orderIds: id },
+//   //   { $set: { status: status } },
+//   //   { session }
+//   // );
+//   
+//   await session.commitTransaction();
+//   
+//   // Fetch updated order
+//   const updatedOrder = await Order.findById(id);
+//   res.json({ success: true, data: updatedOrder });
+//   
+// } catch (error) {
+//   await session.abortTransaction();
+//   throw error;
+// } finally {
+//   session.endSession();
+// }
+//
+// ===================================================================
+// 11.5. Testing Database Persistence
+// ===================================================================
+//
+// After implementing, test these scenarios:
+//
+// 1. Update order status via API
+// 2. Query database directly to verify status was saved:
+//    db.orders.findOne({ _id: ObjectId("...") })
+//    // Should show updated status
+//
+// 3. Refresh frontend - status should persist
+// 4. Restart server - status should still be updated
+// 5. Check updatedAt field - should be recent timestamp
+//
+// ===================================================================
+// 11.6. Common Database Issues to Avoid
+// ===================================================================
+//
+// ❌ DON'T: Update order in memory but forget to save
+//    order.status = status; // Missing: await order.save();
+//
+// ❌ DON'T: Return order object before saving
+//    res.json({ data: order }); // Missing: await order.save();
+//
+// ❌ DON'T: Use findOneAndUpdate without returning updated document
+//    await Order.findOneAndUpdate(...); // Should verify update
+//
+// ✅ DO: Always save after updating
+//    order.status = status;
+//    await order.save(); // CRITICAL
+//
+// ✅ DO: Verify the update was saved
+//    const updated = await Order.findById(id);
+//    if (updated.status !== status) { /* error */ }
+//
+// ✅ DO: Return the order from database (not from memory)
+//    const updatedOrder = await Order.findById(id);
+//    res.json({ data: updatedOrder });
+//
+// ===================================================================
+// Summary
+// ===================================================================
+//
+// The frontend sends: PUT /api/orders/:id/status
+// Body: { "status": "delivered" } or { "status": "out_for_delivery" }
+//
+// Backend should:
+// 1. Authenticate the request
+// 2. Validate status value
+// 3. Check user role - if Driver, only allow "out_for_delivery" or "delivered"
+// 4. Validate status transition (optional but recommended)
+// 5. Update order status IN MEMORY
+// 6. CRITICAL: Save changes to DATABASE (await order.save() or Order.updateOne())
+// 7. Verify the update was persisted to database
+// 8. Add to status history (optional but recommended)
+// 9. Return updated order FROM DATABASE (not from memory)
+//
+// MOST IMPORTANT: Step 6 - Database persistence is CRITICAL.
+// Without saving to database, changes will be lost on server restart
+// and will not be visible to other users or in future requests.
+//
+// Driver restrictions:
+// - Can only set status to: "out_for_delivery" or "delivered"
+// - Should return 403 if driver tries to set other statuses
+//
+// ===================================================================
+

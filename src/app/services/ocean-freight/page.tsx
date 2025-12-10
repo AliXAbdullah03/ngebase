@@ -9,7 +9,7 @@ export default function OceanFreightPage() {
         <div className="min-h-screen bg-gray-50">
             <header className="bg-white shadow-sm">
                 <div className="container mx-auto px-4 md:px-6 py-4 flex justify-between items-center">
-                    <Link href="/" className="text-2xl font-bold text-primary">NEXT GLOBAL EXPRESS</Link>
+                    <Link href="/" className="text-2xl font-bold text-violet-600">NEXT GLOBAL EXPRESS</Link>
                     <Button asChild variant="outline">
                         <Link href="/"><ArrowLeft className="mr-2 h-4 w-4"/>Back to Home</Link>
                     </Button>
@@ -38,21 +38,21 @@ export default function OceanFreightPage() {
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <div className="flex items-start gap-3">
-                                    <CheckCircle className="w-5 h-5 mt-1 text-primary" />
+                                    <CheckCircle className="w-5 h-5 mt-1 text-violet-600" />
                                     <div>
                                         <p className="font-semibold">Cost-Effective</p>
                                         <p className="text-sm text-muted-foreground">The most economical option for bulk shipments.</p>
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-3">
-                                    <CheckCircle className="w-5 h-5 mt-1 text-primary" />
+                                    <CheckCircle className="w-5 h-5 mt-1 text-violet-600" />
                                     <div>
                                         <p className="font-semibold">Full & Partial Containers</p>
                                         <p className="text-sm text-muted-foreground">Options for Full Container Load (FCL) and Less-than-Container Load (LCL).</p>
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-3">
-                                    <CheckCircle className="w-5 h-5 mt-1 text-primary" />
+                                    <CheckCircle className="w-5 h-5 mt-1 text-violet-600" />
                                     <div>
                                         <p className="font-semibold">Global Port Coverage</p>
                                         <p className="text-sm text-muted-foreground">We connect to a vast network of ports worldwide.</p>

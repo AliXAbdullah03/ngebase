@@ -26,7 +26,7 @@ export function EnhancedHeader() {
       }`}
     >
       {/* Top Bar */}
-      <div className="bg-primary text-primary-foreground py-2 hidden md:block">
+      <div className="bg-gradient-violet text-white py-2 hidden md:block">
         <div className="container mx-auto px-4 md:px-6 flex justify-between items-center text-sm">
           <div className="flex items-center gap-6">
             <a href="tel:+971501234567" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
@@ -48,20 +48,20 @@ export function EnhancedHeader() {
       <nav className="container mx-auto px-4 md:px-6 py-4">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center group">
-            <span className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent group-hover:from-primary/80 group-hover:to-primary/50 transition-all">
+            <span className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-violet-600 via-purple-600 to-pink-600 bg-clip-text text-transparent group-hover:from-primary/80 group-hover:to-primary/50 transition-all">
               NEXT GLOBAL EXPRESS
             </span>
           </Link>
 
           {/* Desktop Menu */}
           <div className="hidden lg:flex items-center gap-8">
-            <Link href="/" className="text-foreground hover:text-primary transition-colors font-medium">
+            <Link href="/" className="text-foreground hover:text-violet-400 transition-colors font-medium">
               Home
             </Link>
-            <Link href="/track" className="text-foreground hover:text-primary transition-colors font-medium">
+            <Link href="/track" className="text-foreground hover:text-violet-400 transition-colors font-medium">
               Track
             </Link>
-            <Button asChild className="bg-primary hover:bg-primary/90">
+            <Button asChild className="bg-gradient-violet hover:opacity-90">
               <Link href="/track">Get Started</Link>
             </Button>
           </div>
@@ -85,19 +85,19 @@ export function EnhancedHeader() {
           <div className="lg:hidden mt-4 pb-4 space-y-4 animate-fade-in">
             <Link 
               href="/" 
-              className="block text-foreground hover:text-primary transition-colors font-medium"
+              className="block text-foreground hover:text-violet-400 transition-colors font-medium"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Home
             </Link>
             <Link 
               href="/track" 
-              className="block text-foreground hover:text-primary transition-colors font-medium"
+              className="block text-foreground hover:text-violet-400 transition-colors font-medium"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Track
             </Link>
-            <Button asChild className="w-full bg-primary hover:bg-primary/90">
+            <Button asChild className="w-full bg-gradient-violet hover:opacity-90">
               <Link href="/track" onClick={() => setIsMobileMenuOpen(false)}>Get Started</Link>
             </Button>
           </div>

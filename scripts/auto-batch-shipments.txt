@@ -1,0 +1,75 @@
+// Auto-batch orders into shipments by departure date
+// -------------------------------------------------
+// Usage:
+//   1) Copy this file to your backend repo as auto-batch-shipments.js (or .ts)
+//   2) Ensure env MONGO_URL is set (or swap for your DB connector)
+//   3) Run manually:   node auto-batch-shipments.js
+//   4) Or schedule (cron/PM2) to run periodically
+//
+// This assumes two collections:
+//   Orders: { _id, departureDate, shipmentId?, status, ... }
+//   Shipments: { _id, batchNumber, departureDate, orderIds: [], status, ... }
+//
+// The script:
+//   - Finds all orders with a departureDate and no shipment assigned
+//   - Groups them by departure date (YYYY-MM-DD)
+//   - Creates one shipment per date
+//   - Assigns all grouped orders to that shipment
+
+import mongoose from "mongoose";
+import { Order } from "./models/Order"; // adjust to your path
+import { Shipment } from "./models/Shipment"; // adjust to your path
+
+async function run() {
+  await mongoose.connect(process.env.MONGO_URL as string);
+
+  // 1) Pull unbatched orders
+  const unbatchedOrders = await Order.find({
+    departureDate: { $exists: true, $ne: null },
+    $or: [{ shipmentId: { $exists: false } }, { shipmentId: null }],
+  }).lean();
+
+  if (!unbatchedOrders.length) {
+    console.log("No unbatched orders found. Nothing to do.");
+    return;
+  }
+
+  // 2) Group by departureDate (YYYY-MM-DD)
+  const groups: Record<string, any[]> = {};
+  for (const order of unbatchedOrders) {
+    const key = new Date(order.departureDate).toISOString().split("T")[0];
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(order);
+  }
+
+  // 3) Create shipments & update orders
+  for (const [dateKey, ordersForDate] of Object.entries(groups)) {
+    const orderIds = ordersForDate.map((o) => o._id);
+    const shipment = await Shipment.create({
+      batchNumber: `BATCH-${dateKey}-${Date.now()}`,
+      departureDate: new Date(dateKey),
+      orderIds,
+      status: "pending",
+    });
+
+    await Order.updateMany(
+      { _id: { $in: orderIds } },
+      { $set: { shipmentId: shipment._id } }
+    );
+
+    console.log(
+      `Created shipment ${shipment._id} for ${dateKey} with ${orderIds.length} order(s)`
+    );
+  }
+}
+
+run()
+  .then(() => {
+    console.log("Auto-batching complete");
+    process.exit(0);
+  })
+  .catch((err) => {
+    console.error("Auto-batching failed", err);
+    process.exit(1);
+  });
+

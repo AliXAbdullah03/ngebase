@@ -1,0 +1,344 @@
+// Backend Implementation Prompt: Driver Orders Filtering
+// ===================================================================
+// 
+// The frontend now requests orders filtered by status for Driver users.
+// The backend needs to support status filtering in the GET /api/orders endpoint.
+//
+// ===================================================================
+// 1. GET /api/orders - Status Filtering for Drivers
+// ===================================================================
+//
+// Endpoint: GET /api/orders
+// Query Parameters:
+//   - page: number (pagination)
+//   - limit: number (items per page)
+//   - search: string (optional, search query)
+//   - status: string (optional, comma-separated status values)
+//              Example: "out_for_delivery,in_transit"
+//
+// Expected Behavior:
+// - When status parameter is provided, filter orders by matching status values
+// - Support comma-separated multiple status values
+// - Case-insensitive matching (handle variations)
+// - If no status parameter, return all orders (for non-driver users)
+//
+// ===================================================================
+// 2. Status Value Matching
+// ===================================================================
+//
+// The frontend sends: status=out_for_delivery,in_transit
+//
+// Your database might store status as:
+// - "out_for_delivery" or "Out for Delivery" or "out-for-delivery"
+// - "in_transit" or "In Transit" or "in-transit"
+//
+// Implementation should handle:
+// - Case-insensitive matching
+// - Underscore vs space vs hyphen variations
+// - Normalize both query parameter and database values for comparison
+//
+// Example normalization:
+//   "out_for_delivery" → "outfordelivery"
+//   "Out for Delivery" → "outfordelivery"
+//   "out-for-delivery" → "outfordelivery"
+//
+// ===================================================================
+// 3. Implementation Example (Node.js/Express/Mongoose)
+// ===================================================================
+//
+// router.get('/orders', authenticate, async (req, res) => {
+//   try {
+//     const { page = 1, limit = 10, search, status } = req.query;
+//     const user = req.user; // From authentication middleware
+//     
+//     // Build query
+//     const query: any = {};
+//     
+//     // Status filtering (for drivers or when status param provided)
+//     if (status) {
+//       const statusArray = status.split(',').map(s => s.trim());
+//       
+//       // Normalize status values for matching
+//       const normalizeStatus = (s: string) => 
+//         s.toLowerCase().replace(/[_\s-]/g, '');
+//       
+//       // Build regex or exact match based on your DB format
+//       // Option 1: If DB stores normalized values
+//       const normalizedStatuses = statusArray.map(normalizeStatus);
+//       query.status = { $in: normalizedStatuses };
+//       
+//       // Option 2: If DB stores various formats, use regex
+//       // const statusRegex = statusArray.map(s => {
+//       //   const normalized = normalizeStatus(s);
+//       //   return new RegExp(normalized, 'i');
+//       // });
+//       // query.$or = statusRegex.map(regex => ({ status: regex }));
+//     }
+//     
+//     // Search filtering (optional)
+//     if (search) {
+//       query.$or = [
+//         { orderNumber: { $regex: search, $options: 'i' } },
+//         { 'customerId.firstName': { $regex: search, $options: 'i' } },
+//         { 'customerId.lastName': { $regex: search, $options: 'i' } },
+//       ];
+//     }
+//     
+//     // Pagination
+//     const skip = (parseInt(page) - 1) * parseInt(limit);
+//     const limitNum = parseInt(limit);
+//     
+//     // Fetch orders
+//     const orders = await Order.find(query)
+//       .populate('customerId', 'firstName lastName email phone')
+//       .sort({ createdAt: -1 })
+//       .skip(skip)
+//       .limit(limitNum)
+//       .lean();
+//     
+//     // Get total count for pagination
+//     const total = await Order.countDocuments(query);
+//     const totalPages = Math.ceil(total / limitNum);
+//     
+//     res.json({
+//       success: true,
+//       data: {
+//         items: orders,
+//         pagination: {
+//           page: parseInt(page),
+//           limit: limitNum,
+//           total,
+//           totalPages
+//         }
+//       }
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       success: false,
+//       error: {
+//         code: 'SERVER_ERROR',
+//         message: error.message
+//       }
+//     });
+//   }
+// });
+//
+// ===================================================================
+// 4. Alternative: Role-Based Filtering
+// ===================================================================
+//
+// If you prefer to filter by user role on the backend instead:
+//
+// router.get('/orders', authenticate, async (req, res) => {
+//   try {
+//     const user = req.user;
+//     const { page = 1, limit = 10, search } = req.query;
+//     
+//     const query: any = {};
+//     
+//     // Auto-filter for drivers
+//     if (user.role === 'Driver') {
+//       // Normalize status matching
+//       const normalizeStatus = (s: string) => 
+//         s.toLowerCase().replace(/[_\s-]/g, '');
+//       
+//       // Match orders with out_for_delivery or in_transit status
+//       query.$or = [
+//         { status: { $regex: /out.*for.*delivery/i } },
+//         { status: { $regex: /in.*transit/i } },
+//       ];
+//       
+//       // Or if you store normalized status:
+//       // query.status = { $in: ['outfordelivery', 'intransit'] };
+//     }
+//     
+//     // ... rest of implementation
+//   } catch (error) {
+//     // ... error handling
+//   }
+// });
+//
+// ===================================================================
+// 5. Status Value Standardization (Recommended)
+// ===================================================================
+//
+// To avoid matching issues, standardize status values in your database:
+//
+// Valid status values:
+// - 'pending'
+// - 'processing'
+// - 'confirmed'
+// - 'in_transit' (or 'in-transit' or 'In Transit')
+// - 'out_for_delivery' (or 'out-for-delivery' or 'Out for Delivery')
+// - 'delivered'
+// - 'completed'
+// - 'cancelled'
+//
+// Recommendation: Store normalized values in DB (e.g., 'out_for_delivery')
+// and display formatted versions in the UI (e.g., 'Out for Delivery')
+//
+// ===================================================================
+// 6. Order Model Schema
+// ===================================================================
+//
+// Ensure your Order model has a status field:
+//
+// const orderSchema = new Schema({
+//   orderNumber: {
+//     type: String,
+//     required: true,
+//     unique: true
+//   },
+//   status: {
+//     type: String,
+//     enum: [
+//       'pending',
+//       'processing',
+//       'confirmed',
+//       'in_transit',
+//       'out_for_delivery',
+//       'delivered',
+//       'completed',
+//       'cancelled'
+//     ],
+//     default: 'pending',
+//     index: true // Add index for better query performance
+//   },
+//   customerId: {
+//     type: Schema.Types.ObjectId,
+//     ref: 'Customer',
+//     required: true
+//   },
+//   // ... other fields
+// });
+//
+// ===================================================================
+// 7. Response Format
+// ===================================================================
+//
+// Expected response structure:
+// {
+//   "success": true,
+//   "data": {
+//     "items": [
+//       {
+//         "_id": "693961b5de5490f09d361eb7",
+//         "orderNumber": "ORD-1001",
+//         "status": "out_for_delivery",
+//         "customerId": {
+//           "_id": "...",
+//           "firstName": "John",
+//           "lastName": "Doe"
+//         },
+//         "departureDate": "2025-12-17T20:00:00.000Z",
+//         // ... other order fields
+//       }
+//     ],
+//     "pagination": {
+//       "page": 1,
+//       "limit": 10,
+//       "total": 25,
+//       "totalPages": 3
+//     }
+//   }
+// }
+//
+// ===================================================================
+// 8. Error Handling
+// ===================================================================
+//
+// Handle these cases:
+// - Invalid status parameter: Return 400 with error message
+// - No orders found: Return 200 with empty items array
+// - Authentication required: Return 401
+// - Permission denied: Return 403
+// - Server errors: Return 500
+//
+// Example error response:
+// {
+//   "success": false,
+//   "error": {
+//     "code": "INVALID_STATUS",
+//     "message": "Invalid status value provided"
+//   }
+// }
+//
+// ===================================================================
+// 9. Performance Optimization
+// ===================================================================
+//
+// 1. Add index on status field for faster queries:
+//    orderSchema.index({ status: 1 });
+//
+// 2. Add compound index if filtering by status + other fields:
+//    orderSchema.index({ status: 1, createdAt: -1 });
+//
+// 3. Use lean() queries when you don't need Mongoose documents:
+//    .lean()
+//
+// 4. Limit the number of results per page (default: 10)
+//
+// ===================================================================
+// 10. Testing Checklist
+// ===================================================================
+//
+// Test these scenarios:
+// ✓ GET /api/orders?status=out_for_delivery returns only matching orders
+// ✓ GET /api/orders?status=out_for_delivery,in_transit returns both
+// ✓ GET /api/orders?status=Out%20for%20Delivery (URL encoded) works
+// ✓ GET /api/orders?status=out-for-delivery works (hyphen variation)
+// ✓ GET /api/orders (no status) returns all orders for non-drivers
+// ✓ Status filtering is case-insensitive
+// ✓ Pagination works with status filtering
+// ✓ Search works with status filtering
+// ✓ Authentication required
+// ✓ Returns 200 with empty array if no matching orders
+// ✓ Returns proper error for invalid status values
+//
+// ===================================================================
+// 11. Migration Script (if needed)
+// ===================================================================
+//
+// If your database has inconsistent status values, create a migration:
+//
+// // Normalize all order statuses to standard format
+// async function normalizeOrderStatuses() {
+//   const statusMap = {
+//     'Out for Delivery': 'out_for_delivery',
+//     'out-for-delivery': 'out_for_delivery',
+//     'OutForDelivery': 'out_for_delivery',
+//     'In Transit': 'in_transit',
+//     'in-transit': 'in_transit',
+//     'InTransit': 'in_transit',
+//     // ... other mappings
+//   };
+//   
+//   for (const [oldStatus, newStatus] of Object.entries(statusMap)) {
+//     await Order.updateMany(
+//       { status: oldStatus },
+//       { $set: { status: newStatus } }
+//     );
+//   }
+// }
+//
+// ===================================================================
+// Summary
+// ===================================================================
+//
+// The frontend sends: GET /api/orders?status=out_for_delivery,in_transit
+//
+// Backend should:
+// 1. Accept 'status' query parameter (comma-separated values)
+// 2. Filter orders by matching status values
+// 3. Handle case-insensitive and format variations (underscore/space/hyphen)
+// 4. Return filtered orders with pagination
+// 5. Support search parameter alongside status filtering
+// 6. Require authentication
+// 7. Return standard response format: { success: true, data: {...} }
+//
+// Status values to match:
+// - "out_for_delivery" (and variations: "Out for Delivery", "out-for-delivery")
+// - "in_transit" (and variations: "In Transit", "in-transit")
+//
+// ===================================================================
+
