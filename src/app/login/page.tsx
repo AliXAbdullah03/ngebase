@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getApiUrl } from '@/lib/api';
-import { AlertCircle, Loader2 } from 'lucide-react';
+import { AlertCircle, Loader2, RefreshCw } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -11,6 +11,89 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [testingConnection, setTestingConnection] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<'idle' | 'success' | 'failed'>('idle');
+
+  // Test backend connection (useful for Render.com sleeping apps)
+  const testConnection = async () => {
+    setTestingConnection(true);
+    setConnectionStatus('idle');
+    setError('');
+    
+    try {
+      const apiUrl = getApiUrl();
+      // Try multiple possible health check endpoints
+      const healthEndpoints = [
+        `${apiUrl}/health`,
+        `${apiUrl.replace('/api', '')}/health`,
+        `${apiUrl}/auth/health`,
+        apiUrl.replace('/api', ''), // Root endpoint
+      ];
+      
+      // Try a simple GET request to wake up the server
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 45000); // 45 second timeout for Render
+      
+      let lastError: any = null;
+      for (const healthUrl of healthEndpoints) {
+        try {
+          const response = await fetch(healthUrl, {
+            method: 'GET',
+            signal: controller.signal,
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+          
+          // If we get any response (even 404), the server is awake
+          if (response.status >= 200 && response.status < 600) {
+            clearTimeout(timeoutId);
+            setConnectionStatus('success');
+            setError('');
+            return;
+          }
+        } catch (testError: any) {
+          lastError = testError;
+          // Continue to next endpoint
+          continue;
+        }
+      }
+      
+      clearTimeout(timeoutId);
+      
+      // If all endpoints failed, throw the last error
+      if (lastError) {
+        if (lastError.name === 'AbortError') {
+          throw new Error('Connection timeout. The server may be sleeping (Render.com free tier apps sleep after inactivity). Please wait 30-60 seconds and try again.');
+        }
+        throw lastError;
+      } else {
+        throw new Error('Could not reach any health check endpoint');
+      }
+    } catch (err: any) {
+      console.error('Connection test error:', err);
+      setConnectionStatus('failed');
+      const apiUrl = getApiUrl();
+      const isRender = apiUrl.includes('render.com');
+      
+      if (isRender) {
+        setError(
+          `Cannot connect to Render.com backend. Common causes:\n` +
+          `• App is sleeping (free tier apps sleep after 15 min inactivity)\n` +
+          `• First request may take 30-60 seconds to wake up the server\n` +
+          `• Please wait and try again, or check Render.com dashboard\n\n` +
+          `Backend URL: ${apiUrl}`
+        );
+      } else {
+        setError(
+          `Cannot connect to backend server at ${apiUrl}. ` +
+          `Please ensure the backend is running. Error: ${err.message || 'Network request failed'}`
+        );
+      }
+    } finally {
+      setTestingConnection(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,23 +104,54 @@ export default function LoginPage() {
       const apiUrl = getApiUrl();
       const loginUrl = `${apiUrl}/auth/login`;
       
+      // For Render.com, use a longer timeout (sleeping apps take time to wake up)
+      const isRender = apiUrl.includes('render.com');
+      const timeout = isRender ? 60000 : 30000; // 60s for Render, 30s for others
+      
       let response: Response;
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeout);
+        
         response = await fetch(loginUrl, {
           method: 'POST',
+          signal: controller.signal,
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ email, password }),
         });
+        
+        clearTimeout(timeoutId);
       } catch (fetchError: any) {
         // Network error - backend not reachable
         console.error('Network error:', fetchError);
+        
+        if (fetchError.name === 'AbortError') {
+          const isRender = apiUrl.includes('render.com');
+          if (isRender) {
+            throw new Error(
+              `Request timed out. Render.com free tier apps may be sleeping. ` +
+              `First request can take 30-60 seconds to wake up. Please try again.`
+            );
+          } else {
+            throw new Error('Request timed out. Please check if the backend server is running.');
+          }
+        }
+        
         if (fetchError.message?.includes('Failed to fetch') || fetchError.name === 'TypeError') {
-          throw new Error(
-            `Cannot connect to backend server. Please ensure the backend is running at ${apiUrl}. ` +
-            `Error: ${fetchError.message || 'Network request failed'}`
-          );
+          const isRender = apiUrl.includes('render.com');
+          if (isRender) {
+            throw new Error(
+              `Cannot connect to Render.com backend. The app may be sleeping (free tier apps sleep after 15 min inactivity). ` +
+              `First request can take 30-60 seconds. Please wait and try again.`
+            );
+          } else {
+            throw new Error(
+              `Cannot connect to backend server at ${apiUrl}. ` +
+              `Please ensure the backend is running. Error: ${fetchError.message || 'Network request failed'}`
+            );
+          }
         }
         throw fetchError;
       }
@@ -97,6 +211,31 @@ export default function LoginPage() {
           </p>
         </div>
 
+        {/* Connection Test Button */}
+        <div className="mb-4">
+          <button
+            type="button"
+            onClick={testConnection}
+            disabled={testingConnection || loading}
+            className="w-full flex items-center justify-center gap-2 rounded-md border border-violet-300 bg-violet-50 px-4 py-2 text-sm font-medium text-violet-700 hover:bg-violet-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {testingConnection ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Testing connection...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="h-4 w-4" />
+                Test Backend Connection
+              </>
+            )}
+          </button>
+          {connectionStatus === 'success' && (
+            <p className="mt-2 text-xs text-green-600 text-center">✓ Backend is reachable</p>
+          )}
+        </div>
+
         {error && (
           <div className="rounded-md bg-red-50 p-4">
             <div className="flex">
@@ -104,7 +243,7 @@ export default function LoginPage() {
                 <AlertCircle className="h-5 w-5 text-red-400" />
               </div>
               <div className="ml-3 flex-1">
-                <p className="text-sm font-medium text-red-800">{error}</p>
+                <p className="text-sm font-medium text-red-800 whitespace-pre-line">{error}</p>
                 <p className="text-xs text-red-600 mt-2">
                   API URL: <code className="bg-red-100 px-1 rounded">{getApiUrl()}/auth/login</code>
                 </p>
