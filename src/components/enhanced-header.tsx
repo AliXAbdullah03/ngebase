@@ -1,6 +1,7 @@
 "use client"
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { Menu, X, Phone, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -48,7 +49,15 @@ export function EnhancedHeader() {
       <nav className="container mx-auto px-4 md:px-6 py-4">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center group">
-            <span className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-violet-600 via-purple-600 to-pink-600 bg-clip-text text-transparent group-hover:from-primary/80 group-hover:to-primary/50 transition-all">
+            <Image
+              src="/hero-images/NEXT LOGO.jpg"
+              alt="Next Global Express logo"
+              width={180}
+              height={56}
+              className="h-12 w-auto transition-transform group-hover:scale-105"
+              priority
+            />
+            <span className="ml-3 text-2xl md:text-3xl font-bold tracking-tight bg-gradient-to-r from-violet-600 via-purple-600 to-pink-600 bg-clip-text text-transparent transition-colors">
               NEXT GLOBAL EXPRESS
             </span>
           </Link>

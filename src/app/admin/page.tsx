@@ -18,6 +18,7 @@ import { OrderForm } from '@/components/admin/order-form';
 import { StatusUpdateForm } from '@/components/admin/status-update-form';
 import { UserForm } from '@/components/admin/user-form';
 import { CustomerForm } from '@/components/admin/customer-form';
+import { HubForm } from '@/components/admin/hub-form';
 import { 
   BarChart3,
   Users,
@@ -112,7 +113,7 @@ export default function AdminPage() {
   return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-violet-50 via-purple-50/30 to-pink-50/20">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-500 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-500 mx-auto mb-4" />
           <p className="text-muted-foreground">Checking authentication...</p>
         </div>
       </div>
@@ -122,28 +123,84 @@ export default function AdminPage() {
   const isDriver = currentUser?.role === 'Driver';
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <main className="flex-grow bg-gradient-to-br from-violet-50 via-purple-50/30 to-pink-50/20">
-        <div className="container mx-auto px-4 md:px-6 py-8">
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between">
+    <Tabs value={activeTab} onValueChange={setActiveTab} orientation="vertical" className="flex min-h-screen w-full bg-gradient-to-br from-violet-50 via-purple-50/30 to-pink-50/20">
+      {/* Sidebar */}
+      <aside className="hidden lg:flex w-64 bg-gradient-to-b from-violet-900 via-purple-900 to-pink-900 text-slate-100">
+        <div className="w-full flex flex-col">
+          <div className="px-4 py-4 text-lg font-semibold tracking-tight text-white">Control Center</div>
+            <TabsList className="flex-1 flex flex-col gap-1 bg-transparent border-0 shadow-none p-2">
+            {!isDriver && (
+              <TabsTrigger value="dashboard" className="w-full justify-start gap-3 rounded-lg px-3 py-3 text-slate-200 hover:text-white hover:bg-violet-800/50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-700 data-[state=active]:to-purple-700 data-[state=active]:text-white">
+                <BarChart3 className="w-4 h-4" />
+                <span>Dashboard</span>
+              </TabsTrigger>
+            )}
+            {!isDriver && (
+              <TabsTrigger value="customers" className="w-full justify-start gap-3 rounded-lg px-3 py-3 text-slate-200 hover:text-white hover:bg-violet-800/50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-700 data-[state=active]:to-purple-700 data-[state=active]:text-white">
+                <Users className="w-4 h-4" />
+                <span>Customers</span>
+              </TabsTrigger>
+            )}
+            <TabsTrigger value="orders" className="w-full justify-start gap-3 rounded-lg px-3 py-3 text-slate-200 hover:text-white hover:bg-violet-800/50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-700 data-[state=active]:to-purple-700 data-[state=active]:text-white">
+              <ShoppingCart className="w-4 h-4" />
+              <span>Orders</span>
+            </TabsTrigger>
+            {!isDriver && (
+              <TabsTrigger value="shipments" className="w-full justify-start gap-3 rounded-lg px-3 py-3 text-slate-200 hover:text-white hover:bg-violet-800/50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-700 data-[state=active]:to-purple-700 data-[state=active]:text-white">
+                <Package className="w-4 h-4" />
+                <span>Shipments</span>
+              </TabsTrigger>
+            )}
+            <TabsTrigger value="branches" className="w-full justify-start gap-3 rounded-lg px-3 py-3 text-slate-200 hover:text-white hover:bg-violet-800/50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-700 data-[state=active]:to-purple-700 data-[state=active]:text-white">
+              <Building2 className="w-4 h-4" />
+              <span>Branches</span>
+            </TabsTrigger>
+            {!isDriver && (
+              <TabsTrigger value="hubs" className="w-full justify-start gap-3 rounded-lg px-3 py-3 text-slate-200 hover:text-white hover:bg-violet-800/50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-700 data-[state=active]:to-purple-700 data-[state=active]:text-white">
+                <MapPin className="w-4 h-4" />
+                <span>Hubs</span>
+              </TabsTrigger>
+            )}
+            {hasPermission(currentUser, Permissions.USER_VIEW) && (
+              <TabsTrigger value="users" className="w-full justify-start gap-3 rounded-lg px-3 py-3 text-slate-200 hover:text-white hover:bg-violet-800/50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-700 data-[state=active]:to-purple-700 data-[state=active]:text-white">
+                <UserCog className="w-4 h-4" />
+                <span>Users</span>
+              </TabsTrigger>
+            )}
+            {hasPermission(currentUser, Permissions.USER_VIEW) && (
+              <TabsTrigger value="roles" className="w-full justify-start gap-3 rounded-lg px-3 py-3 text-slate-200 hover:text-white hover:bg-violet-800/50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-700 data-[state=active]:to-purple-700 data-[state=active]:text-white">
+                <Shield className="w-4 h-4" />
+                <span>Roles</span>
+              </TabsTrigger>
+            )}
+            {hasPermission(currentUser, Permissions.FRONTEND_EDIT) && (
+              <TabsTrigger value="webpage" className="w-full justify-start gap-3 rounded-lg px-3 py-3 text-slate-200 hover:text-white hover:bg-violet-800/50 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-700 data-[state=active]:to-purple-700 data-[state=active]:text-white">
+                <Globe className="w-4 h-4" />
+                <span>Web Page</span>
+              </TabsTrigger>
+            )}
+          </TabsList>
+        </div>
+      </aside>
+
+      {/* Main content */}
+      <div className="flex-1 flex flex-col min-w-0 w-full">
+        <header className="w-full border-b bg-gradient-to-r from-violet-600 via-purple-600 to-pink-600 px-4 md:px-6 py-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between shadow-lg">
               <div>
-                <h1 className="text-4xl md:text-5xl font-bold mb-2 bg-gradient-to-r from-violet-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                  Admin Dashboard
-                </h1>
-                <p className="text-muted-foreground text-lg">
-                  Manage your logistics operations and website content
+            <p className="text-sm text-violet-100 font-medium">Control Center</p>
+            <h1 className="text-2xl font-semibold text-white">Admin Dashboard</h1>
+            <p className="text-sm text-violet-100">
+              Manage your logistics operations, customers, orders, and site content in one place.
                 </p>
               </div>
-              <div className="flex items-center gap-4">
-                <Badge variant="outline" className="text-lg px-4 py-2">
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-sm px-3 py-1 bg-white/20 text-white border-white/30 hover:bg-white/30">
                   {currentUser?.role || 'User'}
                 </Badge>
                 <Button 
                   onClick={() => setDashboardRefreshSignal((value) => value + 1)}
                   variant="outline"
-                  className="flex items-center gap-2"
+              className="flex items-center gap-2 bg-white/10 text-white border-white/30 hover:bg-white/20"
                 >
                   <RefreshCw className="w-4 h-4" />
                   <span>Refresh</span>
@@ -151,65 +208,72 @@ export default function AdminPage() {
                 <Button 
                   onClick={handleHome}
                   variant="outline"
-                  className="flex items-center gap-2"
+              className="flex items-center gap-2 bg-white/10 text-white border-white/30 hover:bg-white/20"
                 >
                   <Home className="w-4 h-4" />
                   <span>Logout</span>
                 </Button>
               </div>
-            </div>
-          </div>
+        </header>
 
-          {/* Tabs */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 lg:grid-cols-8 mb-8 h-auto">
+        {/* Mobile nav */}
+        <div className="lg:hidden border-b bg-gradient-to-r from-violet-600 via-purple-600 to-pink-600 px-4 py-3 shadow-md">
+          <TabsList className="flex flex-wrap gap-2 bg-transparent border-0 shadow-none p-0">
               {!isDriver && (
-                <TabsTrigger value="dashboard" className="flex items-center gap-2">
+              <TabsTrigger value="dashboard" className="flex items-center gap-2 rounded-lg px-3 py-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:to-purple-600 data-[state=active]:text-white">
                   <BarChart3 className="w-4 h-4" />
-                  <span className="hidden sm:inline">Dashboard</span>
+                <span>Dashboard</span>
                 </TabsTrigger>
               )}
               {!isDriver && (
-                <TabsTrigger value="customers" className="flex items-center gap-2">
+              <TabsTrigger value="customers" className="flex items-center gap-2 rounded-lg px-3 py-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:to-purple-600 data-[state=active]:text-white">
                   <Users className="w-4 h-4" />
-                  <span className="hidden sm:inline">Customers</span>
+                <span>Customers</span>
                 </TabsTrigger>
               )}
-              <TabsTrigger value="orders" className="flex items-center gap-2">
+            <TabsTrigger value="orders" className="flex items-center gap-2 rounded-lg px-3 py-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:to-purple-600 data-[state=active]:text-white">
                 <ShoppingCart className="w-4 h-4" />
-                <span className="hidden sm:inline">Orders</span>
+              <span>Orders</span>
               </TabsTrigger>
               {!isDriver && (
-                <TabsTrigger value="shipments" className="flex items-center gap-2">
-                  <Package className="w-4 h-4" />
-                  <span className="hidden sm:inline">Shipments</span>
-                </TabsTrigger>
-              )}
-              <TabsTrigger value="branches" className="flex items-center gap-2">
-                <Building2 className="w-4 h-4" />
-                <span className="hidden sm:inline">Branches</span>
+              <TabsTrigger value="shipments" className="flex items-center gap-2 rounded-lg px-3 py-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:to-purple-600 data-[state=active]:text-white">
+                <Package className="w-4 h-4" />
+                <span>Shipments</span>
               </TabsTrigger>
+              )}
+            <TabsTrigger value="branches" className="flex items-center gap-2 rounded-lg px-3 py-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:to-purple-600 data-[state=active]:text-white">
+              <Building2 className="w-4 h-4" />
+              <span>Branches</span>
+            </TabsTrigger>
+            {!isDriver && (
+              <TabsTrigger value="hubs" className="flex items-center gap-2 rounded-lg px-3 py-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:to-purple-600 data-[state=active]:text-white">
+                <MapPin className="w-4 h-4" />
+                <span>Hubs</span>
+              </TabsTrigger>
+            )}
               {hasPermission(currentUser, Permissions.USER_VIEW) && (
-                <TabsTrigger value="users" className="flex items-center gap-2">
+              <TabsTrigger value="users" className="flex items-center gap-2 rounded-lg px-3 py-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:to-purple-600 data-[state=active]:text-white">
                   <UserCog className="w-4 h-4" />
-                  <span className="hidden sm:inline">Users</span>
+                <span>Users</span>
                 </TabsTrigger>
               )}
               {hasPermission(currentUser, Permissions.USER_VIEW) && (
-                <TabsTrigger value="roles" className="flex items-center gap-2">
+              <TabsTrigger value="roles" className="flex items-center gap-2 rounded-lg px-3 py-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:to-purple-600 data-[state=active]:text-white">
                   <Shield className="w-4 h-4" />
-                  <span className="hidden sm:inline">Roles</span>
+                <span>Roles</span>
                 </TabsTrigger>
               )}
               {hasPermission(currentUser, Permissions.FRONTEND_EDIT) && (
-                <TabsTrigger value="webpage" className="flex items-center gap-2">
+              <TabsTrigger value="webpage" className="flex items-center gap-2 rounded-lg px-3 py-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:to-purple-600 data-[state=active]:text-white">
                   <Globe className="w-4 h-4" />
-                  <span className="hidden sm:inline">Web Page</span>
+                <span>Web Page</span>
                 </TabsTrigger>
               )}
             </TabsList>
+        </div>
 
-            {/* Dashboard Tab */}
+        {/* Content */}
+        <div className="p-4 md:p-6 space-y-6 w-full max-w-none">
             {!isDriver && (
               <TabsContent value="dashboard">
                 <DashboardTab 
@@ -219,64 +283,67 @@ export default function AdminPage() {
                     setOpenOrderForm(true);
                     setActiveTab("orders");
                   }}
+                onTabChange={(tab) => {
+                  setActiveTab(tab);
+                }}
                 />
               </TabsContent>
             )}
 
-            {/* Customer Management Tab */}
             {!isDriver && (
               <TabsContent value="customers">
                 <CustomerManagementTab />
               </TabsContent>
             )}
 
-            {/* Orders Tab */}
             <TabsContent value="orders">
               <OrdersTab currentUser={currentUser} openCreateForm={openOrderForm} onFormClose={() => setOpenOrderForm(false)} />
             </TabsContent>
 
-            {/* Shipments Tab */}
             {!isDriver && (
               <TabsContent value="shipments">
                 <ShipmentsTab currentUser={currentUser} />
               </TabsContent>
             )}
 
-            {/* Branch Management Tab */}
             <TabsContent value="branches">
               <BranchManagementTab />
             </TabsContent>
 
-            {/* User Management Tab */}
+            {!isDriver && (
+              <TabsContent value="hubs">
+                <HubsManagementTab />
+              </TabsContent>
+            )}
+
             {hasPermission(currentUser, Permissions.USER_VIEW) && (
               <TabsContent value="users">
                 <UserManagementTab currentUser={currentUser} />
               </TabsContent>
             )}
 
-            {/* Roles Management Tab */}
             {hasPermission(currentUser, Permissions.USER_VIEW) && (
               <TabsContent value="roles">
                 <RolesManagementTab />
               </TabsContent>
             )}
 
-            {/* Web Page Management Tab */}
             {hasPermission(currentUser, Permissions.FRONTEND_EDIT) && (
               <TabsContent value="webpage">
                 <WebPageManagementTab />
               </TabsContent>
             )}
-          </Tabs>
         </div>
-      </main>
     </div>
+    </Tabs>
   );
 }
 
 // Dashboard Tab Component
-function DashboardTab({ currentUser, onNewOrder, refreshSignal }: { currentUser: any; onNewOrder?: () => void; refreshSignal: number }) {
-  const [dashboardData, setDashboardData] = useState<any>(null);
+function DashboardTab({ currentUser, onNewOrder, refreshSignal, onTabChange }: { currentUser: any; onNewOrder?: () => void; refreshSignal: number; onTabChange?: (tab: string) => void }) {
+  const [activeOrdersCount, setActiveOrdersCount] = useState<number>(0);
+  const [deliveredOrdersCount, setDeliveredOrdersCount] = useState<number>(0);
+  const [latestDeparture, setLatestDeparture] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -301,48 +368,83 @@ function DashboardTab({ currentUser, onNewOrder, refreshSignal }: { currentUser:
       setError(null);
       
       const apiUrl = getApiUrl();
-      const endpoint = `/dashboard/stats`;
-      console.log('Backend API URL:', apiUrl);
-      console.log('Fetching dashboard data from:', `${apiUrl}${endpoint}`);
       
-      // Use apiRequest helper which automatically includes auth token
-      const response = await apiRequest(endpoint, {
+      // Fetch orders to get active and delivered counts
+      const ordersResponse = await apiRequest(`/orders?limit=1000`, {
         method: 'GET',
-        cache: 'no-store', // Ensure fresh data
+        cache: 'no-store',
       });
 
-      console.log('Response status:', response.status);
+      if (ordersResponse.ok) {
+        const ordersResult = await ordersResponse.json();
+        let ordersData = [];
       
-      if (!response.ok) {
-        // Handle 401 Unauthorized - redirect to login or show login message
-        if (response.status === 401) {
-          const errorText = await response.text();
-          console.error('Authentication error:', errorText);
-          throw new Error('UNAUTHORIZED: Authentication required. Please log in.');
+        if (ordersResult.data) {
+          if (Array.isArray(ordersResult.data)) {
+            ordersData = ordersResult.data;
+          } else if (ordersResult.data.orders && Array.isArray(ordersResult.data.orders)) {
+            ordersData = ordersResult.data.orders;
+          } else if (ordersResult.data.items && Array.isArray(ordersResult.data.items)) {
+            ordersData = ordersResult.data.items;
+          }
         }
+
+        // Count active orders (not delivered/completed)
+        const active = ordersData.filter((order: any) => {
+          const status = (order.status || '').toLowerCase();
+          return status !== 'delivered' && status !== 'completed';
+        }).length;
+        setActiveOrdersCount(active);
+
+        // Count delivered orders
+        const delivered = ordersData.filter((order: any) => {
+          const status = (order.status || '').toLowerCase();
+          return status === 'delivered' || status === 'completed';
+        }).length;
+        setDeliveredOrdersCount(delivered);
+      }
+
+      // Fetch shipments to get latest departure
+      const shipmentsResponse = await apiRequest(`/shipments?limit=1000&sort=departureDate&order=desc`, {
+        method: 'GET',
+        cache: 'no-store',
+      });
+
+      if (shipmentsResponse.ok) {
+        const shipmentsResult = await shipmentsResponse.json();
+        let shipmentsData = [];
         
-        const errorText = await response.text();
-        console.error('Response error:', errorText);
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+        if (shipmentsResult.data) {
+          if (Array.isArray(shipmentsResult.data)) {
+            shipmentsData = shipmentsResult.data;
+          } else if (shipmentsResult.data.shipments && Array.isArray(shipmentsResult.data.shipments)) {
+            shipmentsData = shipmentsResult.data.shipments;
+          } else if (shipmentsResult.data.items && Array.isArray(shipmentsResult.data.items)) {
+            shipmentsData = shipmentsResult.data.items;
+          }
+        }
 
-      const result = await response.json();
-      console.log('Dashboard data received:', result);
+        // Find latest departure (has departureDate)
+        const latest = shipmentsData
+          .filter((shipment: any) => shipment.departureDate)
+          .sort((a: any, b: any) => {
+            const dateA = new Date(a.departureDate).getTime();
+            const dateB = new Date(b.departureDate).getTime();
+            return dateB - dateA;
+          })[0];
 
-      if (!result.success) {
-        throw new Error(result.error?.message || 'Failed to fetch dashboard data');
-      }
-
-      if (result.data) {
-        setDashboardData(result.data);
-        console.log('Dashboard data set successfully');
-      } else {
-        throw new Error('No data received from server');
+        if (latest) {
+          setLatestDeparture({
+            batchNumber: latest.batchNumber || latest.trackingId || 'N/A',
+            departureDate: latest.departureDate,
+            status: latest.currentStatus || latest.status || 'N/A',
+            id: latest.id || latest._id
+          });
+        }
       }
     } catch (err: any) {
       console.error('Error fetching dashboard data:', err);
       
-      // Provide more helpful error messages
       let errorMessage = 'Failed to load dashboard data.';
       
       if (err.message?.includes('UNAUTHORIZED') || err.message?.includes('Authentication required') || err.message?.includes('status: 401')) {
@@ -364,23 +466,47 @@ function DashboardTab({ currentUser, onNewOrder, refreshSignal }: { currentUser:
     fetchDashboardData();
   }, [fetchDashboardData, refreshSignal]);
 
-  const stats = dashboardData ? [
-    { label: "Total Customers", value: dashboardData.totalCustomers.toLocaleString(), icon: Users, color: "text-blue-500" },
-    { label: "Active Orders", value: dashboardData.activeOrders.toLocaleString(), icon: ShoppingCart, color: "text-green-500" },
-    { label: "In Transit", value: dashboardData.inTransit.toLocaleString(), icon: Package, color: "text-yellow-500" },
-    { label: "Total Revenue", value: `$${dashboardData.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, icon: BarChart3, color: "text-violet-600" },
-  ] : [
-    { label: "Total Customers", value: "0", icon: Users, color: "text-blue-500" },
-    { label: "Active Orders", value: "0", icon: ShoppingCart, color: "text-green-500" },
-    { label: "In Transit", value: "0", icon: Package, color: "text-yellow-500" },
-    { label: "Total Revenue", value: "$0.00", icon: BarChart3, color: "text-violet-600" },
-  ];
+  const handleActiveOrdersClick = () => {
+    if (onTabChange) {
+      onTabChange("orders");
+    }
+  };
+
+  const handleDeliveredOrdersClick = () => {
+    if (onTabChange) {
+      onTabChange("orders");
+    }
+  };
+
+  const handleLatestDepartureClick = () => {
+    if (onTabChange && latestDeparture) {
+      onTabChange("shipments");
+    }
+  };
+
+  const handleViewShipments = () => {
+    if (onTabChange) {
+      onTabChange("shipments");
+    }
+  };
+
+  const handleAddCustomer = () => {
+    if (onTabChange) {
+      onTabChange("customers");
+    }
+  };
+
+  const handleAddBranch = () => {
+    if (onTabChange) {
+      onTabChange("branches");
+    }
+  };
 
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {[1, 2, 3, 4].map((i) => (
+        <div className="grid gap-6 md:grid-cols-3">
+          {[1, 2, 3].map((i) => (
             <Card key={i} className="border-2 border-violet-300/30 shadow-xl">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Loading...</CardTitle>
@@ -466,113 +592,144 @@ function DashboardTab({ currentUser, onNewOrder, refreshSignal }: { currentUser:
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <Card key={stat.label} className="border-2 border-violet-300/30 shadow-xl">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">{stat.label}</CardTitle>
-                <Icon className={`h-5 w-5 ${stat.color}`} />
-          </CardHeader>
-          <CardContent>
-                <div className="text-3xl font-bold">{stat.value}</div>
-                <p className="text-xs text-muted-foreground mt-1">Live data from database</p>
-          </CardContent>
-        </Card>
-          );
-        })}
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Card className="border-2 border-violet-300/30 shadow-xl">
-          <CardHeader>
-            <CardTitle>Recent Orders</CardTitle>
-            <CardDescription>Latest customer orders</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {dashboardData?.recentOrders && dashboardData.recentOrders.length > 0 ? (
-                dashboardData.recentOrders.map((order: any) => (
-                  <div key={order.id} className="flex items-center justify-between p-3 rounded-lg border">
-                    <div>
-                      <p className="font-medium">{order.orderNumber}</p>
-                      <p className="text-sm text-muted-foreground">{order.customer}</p>
-                    </div>
-                    <Badge variant={order.status === 'completed' ? 'default' : 'secondary'}>
-                      {order.status}
-                    </Badge>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-muted-foreground text-center py-4">No recent orders</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-2 border-violet-300/30 shadow-xl">
-          <CardHeader>
-            <CardTitle>Recent Shipments</CardTitle>
-            <CardDescription>Latest shipments</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {dashboardData?.recentShipments && dashboardData.recentShipments.length > 0 ? (
-                dashboardData.recentShipments.map((shipment: any) => (
-                  <div key={shipment.id} className="flex items-center justify-between p-3 rounded-lg border">
-                    <div>
-                      <p className="font-medium">{shipment.trackingId}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {new Date(shipment.date).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <Badge variant={
-                      shipment.status === 'Delivered' ? 'default' : 
-                      shipment.status === 'In Transit' ? 'secondary' : 
-                      'outline'
-                    }>
-                      {shipment.status}
-                    </Badge>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-muted-foreground text-center py-4">No recent shipments</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
+      {/* Quick Actions */}
         <Card className="border-2 border-violet-300/30 shadow-xl">
           <CardHeader>
             <CardTitle>Quick Actions</CardTitle>
             <CardDescription>Common administrative tasks</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 gap-3">
+          <div className="flex flex-wrap gap-3">
               {hasPermission(currentUser, Permissions.ORDER_CREATE) && (
                 <Button 
                   variant="outline" 
-                  className="h-auto py-3 flex-col"
+                className="h-auto py-3 flex items-center gap-2"
                   onClick={onNewOrder}
                 >
-                  <Plus className="w-5 h-5 mb-2" />
+                <Plus className="w-5 h-5" />
                   New Order
                 </Button>
               )}
-              <Button variant="outline" className="h-auto py-3 flex-col">
-                <Users className="w-5 h-5 mb-2" />
+            <Button 
+              variant="outline" 
+              className="h-auto py-3 flex items-center gap-2"
+              onClick={handleAddCustomer}
+            >
+              <Users className="w-5 h-5" />
                 Add Customer
               </Button>
-              <Button variant="outline" className="h-auto py-3 flex-col">
-                <Package className="w-5 h-5 mb-2" />
+            <Button 
+              variant="outline" 
+              className="h-auto py-3 flex items-center gap-2"
+              onClick={handleViewShipments}
+            >
+              <Package className="w-5 h-5" />
                 View Shipments
               </Button>
-              <Button variant="outline" className="h-auto py-3 flex-col">
-                <Building2 className="w-5 h-5 mb-2" />
+            <Button 
+              variant="outline" 
+              className="h-auto py-3 flex items-center gap-2"
+              onClick={handleAddBranch}
+            >
+              <Building2 className="w-5 h-5" />
                 Add Branch
               </Button>
       </div>
+          </CardContent>
+        </Card>
+
+      <div className="grid gap-6 md:grid-cols-3">
+        {/* Active Orders Card */}
+        <Card 
+          className="border-2 border-violet-300/30 shadow-xl cursor-pointer hover:shadow-2xl transition-all hover:border-violet-500/50"
+          onClick={handleActiveOrdersClick}
+        >
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Active Orders</CardTitle>
+            <ShoppingCart className="h-5 w-5 text-green-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{activeOrdersCount.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground mt-1">Orders not yet delivered</p>
+            <Button 
+              variant="ghost" 
+              className="mt-3 w-full text-xs"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleActiveOrdersClick();
+              }}
+            >
+              View Orders <ArrowRight className="w-3 h-3 ml-1" />
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Delivered Orders Card */}
+        <Card 
+          className="border-2 border-violet-300/30 shadow-xl cursor-pointer hover:shadow-2xl transition-all hover:border-violet-500/50"
+          onClick={handleDeliveredOrdersClick}
+        >
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Delivered Orders</CardTitle>
+            <CheckCircle className="h-5 w-5 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{deliveredOrdersCount.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground mt-1">Total orders delivered</p>
+            <Button 
+              variant="ghost" 
+              className="mt-3 w-full text-xs"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDeliveredOrdersClick();
+              }}
+            >
+              View Orders <ArrowRight className="w-3 h-3 ml-1" />
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Latest Departure Card */}
+        <Card 
+          className="border-2 border-violet-300/30 shadow-xl cursor-pointer hover:shadow-2xl transition-all hover:border-violet-500/50"
+          onClick={handleLatestDepartureClick}
+        >
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Latest Departure</CardTitle>
+            <Package className="h-5 w-5 text-yellow-500" />
+          </CardHeader>
+          <CardContent>
+            {latestDeparture ? (
+              <>
+                <div className="text-lg font-bold mb-1">{latestDeparture.batchNumber}</div>
+                <div className="text-sm text-muted-foreground mb-2">
+                  {new Date(latestDeparture.departureDate).toLocaleDateString()}
+                </div>
+                <Badge variant={
+                  latestDeparture.status === 'Delivered' ? 'default' : 
+                  latestDeparture.status === 'In Transit going to Dubai Airport' || 
+                  latestDeparture.status === 'Out for Delivery' ? 'secondary' : 
+                  'outline'
+                } className="mb-2">
+                  {latestDeparture.status}
+                </Badge>
+                <Button 
+                  variant="ghost" 
+                  className="mt-2 w-full text-xs"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleLatestDepartureClick();
+                  }}
+                >
+                  Update Status <ArrowRight className="w-3 h-3 ml-1" />
+                </Button>
+              </>
+            ) : (
+              <>
+                <div className="text-3xl font-bold">N/A</div>
+                <p className="text-xs text-muted-foreground mt-1">No departures found</p>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -1104,6 +1261,60 @@ function CustomerManagementTab() {
   );
 }
 
+// Order Status Update Form Component
+function OrderStatusUpdateForm({ order, onSave, onCancel }: { order: any; onSave: (data: any) => void; onCancel: () => void }) {
+  const [status, setStatus] = useState(order?.status || 'pending');
+  const isDriver = false; // This would come from context if needed
+
+  const statusOptions = isDriver ? [
+    { value: 'out_for_delivery', label: 'Out for Delivery' },
+    { value: 'delivered', label: 'Delivered' },
+  ] : [
+    { value: 'pending', label: 'Pending' },
+    { value: 'processing', label: 'Processing' },
+    { value: 'confirmed', label: 'Confirmed' },
+    { value: 'in_transit', label: 'In Transit' },
+    { value: 'delivered', label: 'Delivered' },
+    { value: 'completed', label: 'Completed' },
+    { value: 'cancelled', label: 'Cancelled' },
+  ];
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave({ status });
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <Label htmlFor="status">Status</Label>
+        <Select value={status} onValueChange={setStatus}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select status" />
+          </SelectTrigger>
+          <SelectContent>
+            {statusOptions.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="flex justify-end gap-2 pt-4">
+        <Button type="button" variant="outline" onClick={onCancel}>
+          <X className="w-4 h-4 mr-2" />
+          Cancel
+        </Button>
+        <Button type="submit" className="bg-primary hover:bg-primary/90">
+          <Save className="w-4 h-4 mr-2" />
+          Update Status
+        </Button>
+      </div>
+    </form>
+  );
+}
+
 // Orders Tab Component
 function OrdersTab({ currentUser, openCreateForm: initialOpenForm = false, onFormClose }: { currentUser: any; openCreateForm?: boolean; onFormClose?: () => void }) {
   const [orders, setOrders] = useState<any[]>([]);
@@ -1115,6 +1326,7 @@ function OrdersTab({ currentUser, openCreateForm: initialOpenForm = false, onFor
   const [showCreateForm, setShowCreateForm] = useState(initialOpenForm);
   const [editingOrder, setEditingOrder] = useState<any>(null);
   const [orderToDelete, setOrderToDelete] = useState<string | number | null>(null);
+  const [updatingOrderStatus, setUpdatingOrderStatus] = useState<any>(null);
   const isDriver = currentUser?.role === 'Driver';
   const [autoBatching, setAutoBatching] = useState(false);
   const [lastAutoBatchSignature, setLastAutoBatchSignature] = useState(() => {
@@ -1785,7 +1997,9 @@ function OrdersTab({ currentUser, openCreateForm: initialOpenForm = false, onFor
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
               <CardTitle className="text-2xl">Orders Management</CardTitle>
-              <CardDescription>View and manage all orders</CardDescription>
+              <CardDescription>
+                View and manage all orders. Orders with the same departure date are automatically grouped into the same batch.
+              </CardDescription>
             </div>
             <div className="flex gap-2">
               {hasPermission(currentUser, Permissions.ORDER_CREATE) && (
@@ -1870,7 +2084,7 @@ function OrdersTab({ currentUser, openCreateForm: initialOpenForm = false, onFor
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Order ID</TableHead>
+                    <TableHead>Tracking ID</TableHead>
                     <TableHead>Customer</TableHead>
                     <TableHead>Date</TableHead>
                     <TableHead>Departure Date</TableHead>
@@ -1886,10 +2100,12 @@ function OrdersTab({ currentUser, openCreateForm: initialOpenForm = false, onFor
                     const customerName = order.customerId?.firstName && order.customerId?.lastName 
                       ? `${order.customerId.firstName} ${order.customerId.lastName}`
                       : order.customer || 'N/A';
+                    // Use trackingId if available, otherwise use orderNumber, otherwise use orderId
+                    const trackingId = order.trackingId || order.orderNumber || orderId;
 
                     return (
                       <TableRow key={orderId}>
-                        <TableCell className="font-medium">{order.orderNumber || orderId}</TableCell>
+                        <TableCell className="font-medium">{trackingId}</TableCell>
                         <TableCell>{customerName}</TableCell>
                         <TableCell>{orderDate.toLocaleDateString()}</TableCell>
                   <TableCell>
@@ -1903,42 +2119,40 @@ function OrdersTab({ currentUser, openCreateForm: initialOpenForm = false, onFor
                           )}
                   </TableCell>
                         <TableCell>
-                          {hasPermission(currentUser, Permissions.ORDER_MODIFY) ? (
-                            <Select
-                              value={(order.status || 'pending').toLowerCase()}
-                              onValueChange={(newStatus) => handleOrderStatusChange(orderId, newStatus)}
-                            >
-                              <SelectTrigger className="w-[200px] md:w-[220px]">
-                                <SelectValue placeholder="Select status" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {isDriver ? (
-                                  <>
-                                    <SelectItem value="out_for_delivery">Out for Delivery</SelectItem>
-                                    <SelectItem value="delivered">Delivered</SelectItem>
-                                  </>
-                                ) : (
-                                  <>
-                                    <SelectItem value="pending">Pending</SelectItem>
-                                    <SelectItem value="processing">Processing</SelectItem>
-                                    <SelectItem value="confirmed">Confirmed</SelectItem>
-                                    <SelectItem value="in_transit">In Transit</SelectItem>
-                                    <SelectItem value="delivered">Delivered</SelectItem>
-                                    <SelectItem value="completed">Completed</SelectItem>
-                                    <SelectItem value="cancelled">Cancelled</SelectItem>
-                                  </>
-                                )}
-                              </SelectContent>
-                            </Select>
-                          ) : (
+                          <div className="flex flex-col gap-1">
+                            <span className="text-xs text-muted-foreground">Current Status</span>
                             <Badge variant={order.status === 'completed' || order.status === 'Completed' ? "default" : "secondary"}>
                               {order.status || 'pending'}
                             </Badge>
-                          )}
+                          </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-2">
                             {hasPermission(currentUser, Permissions.ORDER_MODIFY) && (
+                              <>
+                                <Dialog open={updatingOrderStatus?.id === orderId || updatingOrderStatus?._id === orderId} onOpenChange={(open) => !open && setUpdatingOrderStatus(null)}>
+                                  <DialogTrigger asChild>
+                                    <Button variant="outline" size="sm" onClick={() => setUpdatingOrderStatus(order)}>
+                                      Update
+                                    </Button>
+                                  </DialogTrigger>
+                                  <DialogContent>
+                                    <DialogHeader>
+                                      <DialogTitle>Update Order Status</DialogTitle>
+                                      <DialogDescription>
+                                        Update the status for order: {order.orderNumber || orderId}
+                                      </DialogDescription>
+                                    </DialogHeader>
+                                    <OrderStatusUpdateForm
+                                      order={order}
+                                      onSave={(data) => {
+                                        handleOrderStatusChange(orderId, data.status);
+                                        setUpdatingOrderStatus(null);
+                                      }}
+                                      onCancel={() => setUpdatingOrderStatus(null)}
+                                    />
+                                  </DialogContent>
+                                </Dialog>
                               <Dialog open={editingOrder?.id === orderId || editingOrder?._id === orderId} onOpenChange={(open) => !open && setEditingOrder(null)}>
                                 <DialogTrigger asChild>
                                   <Button variant="ghost" size="icon" onClick={() => setEditingOrder(order)}>
@@ -1956,6 +2170,7 @@ function OrdersTab({ currentUser, openCreateForm: initialOpenForm = false, onFor
                                   />
                                 </DialogContent>
                               </Dialog>
+                              </>
                             )}
                             {hasPermission(currentUser, Permissions.ORDER_DELETE) && (
                               <Button 
@@ -2183,7 +2398,7 @@ function ShipmentsTab({ currentUser }: { currentUser: any }) {
       
       toast({
         title: "Success",
-        description: `Shipment status updated to ${data.status}. All orders in this shipment have been updated.`,
+        description: `Shipment status updated to ${data.status}. All orders in this batch have been automatically updated.`,
         variant: "default",
       });
     } catch (err: any) {
@@ -2236,7 +2451,7 @@ function ShipmentsTab({ currentUser }: { currentUser: any }) {
 
       toast({
         title: "Success",
-        description: `Shipment status updated to ${newStatus}. All orders in this shipment have been updated automatically.`,
+        description: `Shipment status updated to ${newStatus}. All orders in this batch have been automatically updated.`,
         variant: "default",
       });
     } catch (err: any) {
@@ -2344,7 +2559,9 @@ function ShipmentsTab({ currentUser }: { currentUser: any }) {
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
               <CardTitle className="text-2xl">Shipments Management</CardTitle>
-              <CardDescription>Track and manage all shipments</CardDescription>
+              <CardDescription>
+                Track and manage all shipments. Updating a shipment's batch status automatically updates all orders in that batch.
+              </CardDescription>
             </div>
             <div className="flex gap-2">
               {hasPermission(currentUser, Permissions.SHIPMENT_BULK_UPDATE) && selectedShipments.length > 0 && (
@@ -2500,42 +2717,16 @@ function ShipmentsTab({ currentUser }: { currentUser: any }) {
                             <Badge variant="outline">{ordersCount} orders</Badge>
                           </TableCell>
                           <TableCell>
-                            {hasPermission(currentUser, Permissions.SHIPMENT_STATUS_UPDATE) ? (
-                              <Select
-                                value={status}
-                                onValueChange={(newStatus) => handleShipmentStatusChange(shipmentId, newStatus)}
-                              >
-                                <SelectTrigger className="w-[200px] md:w-[220px]">
-                                  <SelectValue placeholder="Select status" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {isDriver ? (
-                                    <>
-                                      <SelectItem value="out_for_delivery">Out for Delivery</SelectItem>
-                                      <SelectItem value="delivered">Delivered</SelectItem>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <SelectItem value="pending">Pending</SelectItem>
-                                      <SelectItem value="processing">Processing</SelectItem>
-                                      <SelectItem value="confirmed">Confirmed</SelectItem>
-                                      <SelectItem value="in_transit">In Transit</SelectItem>
-                                      <SelectItem value="delivered">Delivered</SelectItem>
-                                      <SelectItem value="completed">Completed</SelectItem>
-                                      <SelectItem value="cancelled">Cancelled</SelectItem>
-                                    </>
-                                  )}
-                                </SelectContent>
-                              </Select>
-                            ) : (
+                            <div className="flex flex-col gap-1">
+                              <span className="text-xs text-muted-foreground">Current Status</span>
                               <Badge variant={
-                                status === 'delivered' || status === 'completed' ? 'default' : 
-                                status === 'in_transit' ? 'secondary' : 
+                                status === 'delivered' || rawStatus === 'Delivered' ? 'default' : 
+                                status === 'in_transit' || rawStatus === 'In Transit going to Dubai Airport' || rawStatus === 'Out for Delivery' ? 'secondary' : 
                                 'outline'
                               }>
-                                {status}
+                                {rawStatus}
                               </Badge>
-                            )}
+                            </div>
                           </TableCell>
                           <TableCell>{shipmentDate.toLocaleDateString()}</TableCell>
                         <TableCell>
@@ -5021,5 +5212,412 @@ function SiteSettingsManagement() {
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+// Hubs Management Tab Component
+function HubsManagementTab() {
+  const [hubs, setHubs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [editingHub, setEditingHub] = useState<any>(null);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [hubToDelete, setHubToDelete] = useState<string | null>(null);
+
+  // Fetch hubs from backend
+  useEffect(() => {
+    const fetchHubs = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await apiRequest('/hubs', {
+          method: 'GET',
+        });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            throw new Error('Authentication required. Please log in.');
+          }
+          // If endpoint doesn't exist yet, return empty array
+          if (response.status === 404) {
+            setHubs([]);
+            return;
+          }
+          throw new Error(`Failed to fetch hubs: ${response.status}`);
+        }
+
+        const result = await response.json();
+
+        // Handle response - ensure it's always an array
+        let hubsData = [];
+        
+        if (result.data) {
+          if (Array.isArray(result.data)) {
+            hubsData = result.data;
+          } else if (result.data.hubs && Array.isArray(result.data.hubs)) {
+            hubsData = result.data.hubs;
+          } else if (result.data.items && Array.isArray(result.data.items)) {
+            hubsData = result.data.items;
+          }
+        }
+        
+        // Ensure hubsData is an array
+        if (!Array.isArray(hubsData)) {
+          hubsData = [];
+        }
+
+        setHubs(hubsData);
+      } catch (err: any) {
+        console.error('Error fetching hubs:', err);
+        // Don't show error if endpoint doesn't exist yet
+        if (err.message?.includes('404')) {
+          setHubs([]);
+        } else {
+          setError(err.message || 'Failed to load hubs');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHubs();
+  }, []);
+
+  const handleDelete = (hubId: string) => {
+    setHubToDelete(hubId);
+  };
+
+  const confirmDeleteHub = async () => {
+    if (!hubToDelete) return;
+
+    try {
+      const endpoint = `/hubs/${hubToDelete}`;
+      const response = await apiRequest(endpoint, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error?.message || `Failed to delete hub: ${response.status}`);
+      }
+
+      // Remove from local state
+      setHubs(hubs.filter(hub => (hub._id || hub.id) !== hubToDelete));
+      
+      toast({
+        title: "Success",
+        description: "Hub deleted successfully!",
+        variant: "default",
+      });
+    } catch (err: any) {
+      console.error('Error deleting hub:', err);
+      toast({
+        title: "Error",
+        description: "Failed to delete hub: " + err.message,
+        variant: "destructive",
+      });
+    } finally {
+      setHubToDelete(null);
+    }
+  };
+
+  const handleCreateHub = async (hubData: any) => {
+    try {
+      const response = await apiRequest('/hubs', {
+        method: 'POST',
+        body: JSON.stringify(hubData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error?.message || `Failed to create hub: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      // Refetch hubs
+      const fetchResponse = await apiRequest('/hubs');
+      if (fetchResponse.ok) {
+        const fetchResult = await fetchResponse.json();
+        let hubsData = [];
+        
+        if (fetchResult.data) {
+          if (Array.isArray(fetchResult.data)) {
+            hubsData = fetchResult.data;
+          } else if (fetchResult.data.hubs && Array.isArray(fetchResult.data.hubs)) {
+            hubsData = fetchResult.data.hubs;
+          } else if (fetchResult.data.items && Array.isArray(fetchResult.data.items)) {
+            hubsData = fetchResult.data.items;
+          }
+        }
+        
+        if (!Array.isArray(hubsData)) hubsData = [];
+        setHubs(hubsData);
+      }
+
+      toast({
+        title: "Success",
+        description: "Hub created successfully!",
+        variant: "default",
+      });
+      setShowCreateForm(false);
+    } catch (err: any) {
+      console.error('Error creating hub:', err);
+      toast({
+        title: "Error",
+        description: "Failed to create hub: " + err.message,
+        variant: "destructive",
+      });
+      throw err;
+    }
+  };
+
+  const handleUpdateHub = async (hubData: any) => {
+    if (!editingHub) return;
+
+    try {
+      const hubId = editingHub._id || editingHub.id;
+      const response = await apiRequest(`/hubs/${hubId}`, {
+        method: 'PUT',
+        body: JSON.stringify(hubData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error?.message || `Failed to update hub: ${response.status}`);
+      }
+
+      // Refetch hubs
+      const fetchResponse = await apiRequest('/hubs');
+      if (fetchResponse.ok) {
+        const fetchResult = await fetchResponse.json();
+        let hubsData = [];
+        
+        if (fetchResult.data) {
+          if (Array.isArray(fetchResult.data)) {
+            hubsData = fetchResult.data;
+          } else if (fetchResult.data.hubs && Array.isArray(fetchResult.data.hubs)) {
+            hubsData = fetchResult.data.hubs;
+          } else if (fetchResult.data.items && Array.isArray(fetchResult.data.items)) {
+            hubsData = fetchResult.data.items;
+          }
+        }
+        
+        if (!Array.isArray(hubsData)) hubsData = [];
+        setHubs(hubsData);
+      }
+
+      toast({
+        title: "Success",
+        description: "Hub updated successfully!",
+        variant: "default",
+      });
+      setEditingHub(null);
+    } catch (err: any) {
+      console.error('Error updating hub:', err);
+      toast({
+        title: "Error",
+        description: "Failed to update hub: " + err.message,
+        variant: "destructive",
+      });
+      throw err;
+    }
+  };
+
+  if (loading) {
+    return (
+      <Card className="border-2 border-violet-300/30 shadow-xl">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-violet-600" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error && hubs.length === 0) {
+    return (
+      <Card className="border-2 border-violet-300/30 shadow-xl">
+        <CardContent className="p-6">
+          <div className="text-center space-y-3">
+            <AlertCircle className="w-6 h-6 text-red-500 mx-auto" />
+            <p className="font-semibold">Error loading hubs</p>
+            <p className="text-sm text-muted-foreground">{error}</p>
+            <Button onClick={() => window.location.reload()}>Retry</Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <Card className="border-2 border-violet-300/30 shadow-xl">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Global Hubs Management</CardTitle>
+              <CardDescription>Manage your global hub locations and contact information</CardDescription>
+            </div>
+            <Button onClick={() => setShowCreateForm(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Add Hub
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {showCreateForm && (
+            <div className="mb-6">
+              <HubForm
+                onSave={handleCreateHub}
+                onCancel={() => setShowCreateForm(false)}
+              />
+            </div>
+          )}
+
+          {editingHub && (
+            <div className="mb-6">
+              <HubForm
+                hub={editingHub}
+                onSave={handleUpdateHub}
+                onCancel={() => setEditingHub(null)}
+              />
+            </div>
+          )}
+
+          {hubs.length === 0 ? (
+            <div className="text-center py-12">
+              <MapPin className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-lg font-semibold mb-2">No hubs found</p>
+              <p className="text-sm text-muted-foreground mb-4">Create your first hub to get started</p>
+              <Button onClick={() => setShowCreateForm(true)}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Hub
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {hubs.map((hub) => {
+                const hubId = hub._id || hub.id;
+                return (
+                  <Card key={hubId} className="border-2 border-violet-300/30">
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 space-y-3">
+                          <div>
+                            <h3 className="text-2xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
+                              {hub.name || 'Unnamed Hub'}
+                            </h3>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              Code: {hub.code || 'N/A'}
+                            </p>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <div className="flex items-start gap-2">
+                                <MapPin className="w-4 h-4 text-violet-600 mt-1 flex-shrink-0" />
+                                <div>
+                                  <p className="text-xs font-semibold text-muted-foreground">Address</p>
+                                  <p className="text-sm">{hub.address || 'N/A'}</p>
+                                </div>
+                              </div>
+                              <div className="flex items-start gap-2">
+                                <Mail className="w-4 h-4 text-violet-600 mt-1 flex-shrink-0" />
+                                <div>
+                                  <p className="text-xs font-semibold text-muted-foreground">Email</p>
+                                  <a href={`mailto:${hub.email}`} className="text-sm text-violet-600 hover:underline">
+                                    {hub.email || 'N/A'}
+                                  </a>
+                                </div>
+                              </div>
+                              <div className="flex items-start gap-2">
+                                <Phone className="w-4 h-4 text-violet-600 mt-1 flex-shrink-0" />
+                                <div>
+                                  <p className="text-xs font-semibold text-muted-foreground">Mobile</p>
+                                  <a href={`tel:${hub.mobile}`} className="text-sm text-violet-600 hover:underline">
+                                    {hub.mobile || 'N/A'}
+                                  </a>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="space-y-2">
+                              {hub.operatingTime && (
+                                <div className="flex items-start gap-2">
+                                  <Clock className="w-4 h-4 text-violet-600 mt-1 flex-shrink-0" />
+                                  <div>
+                                    <p className="text-xs font-semibold text-muted-foreground">Operating Time</p>
+                                    <p className="text-sm">{hub.operatingDays || ''} {hub.operatingTime}</p>
+                                  </div>
+                                </div>
+                              )}
+                              {hub.timeZone && (
+                                <div className="flex items-start gap-2">
+                                  <Globe className="w-4 h-4 text-violet-600 mt-1 flex-shrink-0" />
+                                  <div>
+                                    <p className="text-xs font-semibold text-muted-foreground">Time Zone</p>
+                                    <p className="text-sm">{hub.timeZone} ({hub.timeZoneOffset || ''})</p>
+                                  </div>
+                                </div>
+                              )}
+                              {hub.description && (
+                                <div>
+                                  <p className="text-xs font-semibold text-muted-foreground mb-1">Description</p>
+                                  <p className="text-sm">{hub.description}</p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="flex gap-2 ml-4">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setEditingHub(hub)}
+                          >
+                            <Edit className="w-4 h-4 mr-2" />
+                            Edit
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-red-600 hover:text-red-700"
+                            onClick={() => handleDelete(hubId)}
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <AlertDialog open={!!hubToDelete} onOpenChange={(open) => !open && setHubToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Hub</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this hub? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteHub} className="bg-red-600 hover:bg-red-700">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
   );
 }

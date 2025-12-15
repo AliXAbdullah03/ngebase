@@ -9,7 +9,19 @@ export default function AirFreightPage() {
         <div className="min-h-screen bg-gray-50">
             <header className="bg-white shadow-sm">
                 <div className="container mx-auto px-4 md:px-6 py-4 flex justify-between items-center">
-                    <Link href="/" className="text-2xl font-bold text-violet-600">NEXT GLOBAL EXPRESS</Link>
+                    <Link href="/" className="inline-flex items-center">
+                        <Image
+                            src="/hero-images/NEXT LOGO.jpg"
+                            alt="Next Global Express logo"
+                            width={180}
+                            height={56}
+                            className="h-12 w-auto"
+                            priority
+                        />
+                        <span className="ml-3 text-2xl font-bold bg-gradient-to-r from-violet-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                            NEXT GLOBAL EXPRESS
+                        </span>
+                    </Link>
                     <Button asChild variant="outline">
                         <Link href="/"><ArrowLeft className="mr-2 h-4 w-4"/>Back to Home</Link>
                     </Button>

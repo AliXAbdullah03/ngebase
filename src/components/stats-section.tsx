@@ -1,7 +1,7 @@
 "use client"
 
 import { AnimatedCounter } from './animated-counter';
-import { Globe, Package, Users, Award } from 'lucide-react';
+import { DollarSign, Package, Users, Award } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 const stats = [
@@ -9,15 +9,15 @@ const stats = [
     id: 1,
     value: 150,
     suffix: '+',
-    label: 'Countries Served',
-    description: 'Global reach across continents',
-    icon: Globe,
+    label: 'Cash on Delivery',
+    description: 'Convenient payment option available',
+    icon: DollarSign,
     color: 'text-blue-500'
   },
   {
     id: 2,
-    value: 500000,
-    suffix: '+',
+    value: 3000,
+    suffix: '',
     label: 'Packages Delivered',
     description: 'Successfully shipped worldwide',
     icon: Package,
@@ -25,8 +25,8 @@ const stats = [
   },
   {
     id: 3,
-    value: 10000,
-    suffix: '+',
+    value: 3000,
+    suffix: '',
     label: 'Happy Clients',
     description: 'Trusted by businesses globally',
     icon: Users,
@@ -34,8 +34,8 @@ const stats = [
   },
   {
     id: 4,
-    value: 25,
-    suffix: '+',
+    value: 2,
+    suffix: '',
     label: 'Years of Excellence',
     description: 'Industry-leading experience',
     icon: Award,
@@ -82,11 +82,15 @@ export function StatsSection() {
                   </div>
                   <div className="mb-2">
                     <div className="text-4xl md:text-5xl font-bold text-foreground">
-                      <AnimatedCounter 
-                        value={stat.value} 
-                        suffix={stat.suffix}
-                        className="inline-block"
-                      />
+                      {stat.id === 1 ? (
+                        <span className="inline-block">Affordable</span>
+                      ) : (
+                        <AnimatedCounter 
+                          value={stat.value} 
+                          suffix={stat.suffix}
+                          className="inline-block"
+                        />
+                      )}
                     </div>
                   </div>
                   <h3 className="text-xl font-semibold mb-2 text-foreground group-hover:bg-gradient-to-r group-hover:from-violet-600 group-hover:to-purple-600 group-hover:bg-clip-text group-hover:text-transparent transition-all">

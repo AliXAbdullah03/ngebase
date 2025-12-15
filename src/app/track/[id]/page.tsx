@@ -188,6 +188,9 @@ export default function TrackShipmentPage() {
       return 'Processing';
     };
     
+    // Get current status mapped
+    const currentMappedStatus = mapStatus(status);
+    
     // Transform shipment history
     if (shipment?.history && Array.isArray(shipment.history)) {
       shipment.history.forEach((item: any) => {
@@ -217,14 +220,46 @@ export default function TrackShipmentPage() {
     // If no history, create a default entry from current status
     if (historyArray.length === 0) {
       historyArray.push({
-        status: mapStatus(status),
+        status: currentMappedStatus,
         date: order?.updatedAt || shipment?.updatedAt || order?.createdAt || shipment?.createdAt || new Date().toISOString(),
         location: 'N/A',
         notes: ''
       });
+    } else {
+      // Ensure the most recent entry matches the current status
+      // Sort by date first
+      historyArray.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      
+      // Check if the most recent entry matches current status
+      const mostRecent = historyArray[0];
+      const mostRecentMappedStatus = mapStatus(mostRecent.status as string);
+      
+      // If the most recent entry doesn't match current status, update it or add a new entry
+      if (mostRecentMappedStatus !== currentMappedStatus) {
+        // Update the most recent entry to current status, or add new entry if dates are different
+        const currentDate = order?.updatedAt || shipment?.updatedAt || new Date().toISOString();
+        const mostRecentDate = new Date(mostRecent.date).getTime();
+        const currentDateTime = new Date(currentDate).getTime();
+        
+        // If dates are significantly different, add a new entry
+        if (Math.abs(currentDateTime - mostRecentDate) > 60000) { // More than 1 minute difference
+          historyArray.unshift({
+            status: currentMappedStatus,
+            date: currentDate,
+            location: 'N/A',
+            notes: ''
+          });
+        } else {
+          // Update the most recent entry
+          historyArray[0] = {
+            ...mostRecent,
+            status: currentMappedStatus
+          };
+        }
+      }
     }
     
-    // Sort by date (newest first)
+    // Final sort by date (newest first)
     return historyArray.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   };
   

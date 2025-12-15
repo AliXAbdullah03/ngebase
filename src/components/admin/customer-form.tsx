@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Save, X } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 
 interface CustomerFormProps {
   customer?: any;
@@ -25,6 +26,23 @@ export function CustomerForm({ customer, onSave, onCancel }: CustomerFormProps) 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate all required fields are filled
+    if (!formData.firstName.trim() || 
+        !formData.lastName.trim() || 
+        !formData.email.trim() || 
+        !formData.phone.trim() || 
+        !formData.address.trim() || 
+        !formData.city.trim() || 
+        !formData.country.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all required fields. Phone number is especially important as it is used to match existing customers when creating orders.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     onSave(formData);
   };
 
@@ -63,39 +81,44 @@ export function CustomerForm({ customer, onSave, onCancel }: CustomerFormProps) 
           />
         </div>
         <div>
-          <Label htmlFor="phone">Phone</Label>
+          <Label htmlFor="phone">Phone *</Label>
           <Input
             id="phone"
             value={formData.phone}
             onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+            required
+            placeholder="Used as primary key for matching customers"
           />
         </div>
       </div>
 
       <div>
-        <Label htmlFor="address">Address</Label>
+        <Label htmlFor="address">Address *</Label>
         <Input
           id="address"
           value={formData.address}
           onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+          required
         />
       </div>
 
       <div className="grid md:grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="city">City</Label>
+          <Label htmlFor="city">City *</Label>
           <Input
             id="city"
             value={formData.city}
             onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+            required
           />
         </div>
         <div>
-          <Label htmlFor="country">Country</Label>
+          <Label htmlFor="country">Country *</Label>
           <Input
             id="country"
             value={formData.country}
             onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+            required
           />
         </div>
       </div>

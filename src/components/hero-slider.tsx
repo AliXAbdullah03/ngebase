@@ -1,7 +1,7 @@
 "use client"
 
 import { TrackingSearch } from '@/components/tracking-search';
-import { Search, CheckCircle } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from '@/components/ui/carousel';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
@@ -101,7 +101,7 @@ export function HeroSlider() {
   }, [api]);
 
   return (
-    <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-gradient-to-br from-violet-50 via-purple-50/30 to-pink-50/20">
+    <section className="relative min-h-[90vh] flex items-start overflow-hidden bg-gradient-to-br from-violet-50 via-purple-50/30 to-pink-50/20">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-0 right-1/4 w-96 h-96 bg-violet-400/20 rounded-full blur-3xl animate-pulse"></div>
@@ -109,7 +109,7 @@ export function HeroSlider() {
       </div>
 
       {/* Content */}
-      <div className="container mx-auto px-4 md:px-6 relative z-10 grid lg:grid-cols-2 gap-12 items-center py-20">
+      <div className="container mx-auto px-4 md:px-6 relative z-10 grid lg:grid-cols-2 gap-12 items-center pt-48 pb-20">
         <div className="space-y-6 animate-slide-in-left">
           <div className="space-y-4">
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight">
@@ -118,9 +118,6 @@ export function HeroSlider() {
                 Your Trusted Logistics Partner
               </span>
             </h1>
-            <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed max-w-xl">
-              Connecting businesses worldwide with seamless shipping solutions and real-time tracking.
-            </p>
           </div>
 
           {/* Tracking Search */}
@@ -144,25 +141,6 @@ export function HeroSlider() {
               <span>Example:</span>
               <code className="px-2 py-0.5 bg-gradient-to-r from-violet-100 to-purple-100 rounded text-violet-600 font-mono text-xs">NGE123456789</code>
             </p>
-          </div>
-
-          {/* Features Grid */}
-          <div className="grid grid-cols-2 gap-4 mt-8">
-            {[
-              "No Minimum Weight",
-              "2-3 Days Delivery",
-              "Real-Time Updates",
-              "100% Insured"
-            ].map((feature, idx) => (
-              <div 
-                key={idx} 
-                className="flex items-center gap-2 text-foreground animate-fade-in"
-                style={{ animationDelay: `${0.2 + idx * 0.1}s` }}
-              >
-                <CheckCircle className="h-5 w-5 text-violet-600 flex-shrink-0" />
-                <span className="text-sm md:text-base">{feature}</span>
-              </div>
-            ))}
           </div>
         </div>
 

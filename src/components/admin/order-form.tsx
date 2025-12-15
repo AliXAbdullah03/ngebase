@@ -45,8 +45,18 @@ export function OrderForm({ order, onSave, onCancel }: OrderFormProps) {
   const [departureDateOpen, setDepartureDateOpen] = useState(false);
   const [branches, setBranches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [customers, setCustomers] = useState<any[]>([]);
+  const [customerSearch, setCustomerSearch] = useState(
+    existingCustomer 
+      ? `${existingCustomer.firstName || ''} ${existingCustomer.lastName || ''}`.trim() || existingCustomer.phone || ''
+      : ''
+  );
+  const [showCustomerSuggestions, setShowCustomerSuggestions] = useState(false);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(
+    order?.customerId?._id || order?.customerId?.id || order?.customerId || null
+  );
 
-  // Fetch branches from backend
+  // Fetch branches and customers from backend
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -70,6 +80,26 @@ export function OrderForm({ order, onSave, onCancel }: OrderFormProps) {
           
           if (!Array.isArray(branchesList)) branchesList = [];
           setBranches(branchesList);
+        }
+
+        // Fetch customers
+        const customersRes = await apiRequest('/customers?limit=1000');
+        if (customersRes.ok) {
+          const customersData = await customersRes.json();
+          let customersList = [];
+          
+          if (customersData.data) {
+            if (Array.isArray(customersData.data)) {
+              customersList = customersData.data;
+            } else if (customersData.data.customers && Array.isArray(customersData.data.customers)) {
+              customersList = customersData.data.customers;
+            } else if (customersData.data.items && Array.isArray(customersData.data.items)) {
+              customersList = customersData.data.items;
+            }
+          }
+          
+          if (!Array.isArray(customersList)) customersList = [];
+          setCustomers(customersList);
         }
       } catch (err) {
         console.error('Error fetching form data:', err);
@@ -107,6 +137,43 @@ export function OrderForm({ order, onSave, onCancel }: OrderFormProps) {
         items: newItems,
       };
     });
+  };
+
+  // Filter customers based on search query
+  const filteredCustomers = customers.filter((customer: any) => {
+    if (!customerSearch.trim()) return false;
+    const searchLower = customerSearch.toLowerCase();
+    const firstName = (customer.firstName || '').toLowerCase();
+    const lastName = (customer.lastName || '').toLowerCase();
+    const phone = (customer.phone || '').toLowerCase();
+    const email = (customer.email || '').toLowerCase();
+    
+    return firstName.includes(searchLower) || 
+           lastName.includes(searchLower) || 
+           phone.includes(searchLower) ||
+           email.includes(searchLower) ||
+           `${firstName} ${lastName}`.includes(searchLower);
+  });
+
+  // Handle customer selection
+  const handleCustomerSelect = (customer: any) => {
+    const customerId = customer.id || customer._id;
+    setSelectedCustomerId(customerId);
+    setCustomerSearch(`${customer.firstName || ''} ${customer.lastName || ''}`.trim() || customer.phone || '');
+    setShowCustomerSuggestions(false);
+    
+    // Auto-fill all customer fields
+    setFormData(prevFormData => ({
+      ...prevFormData,
+      customerId: customerId,
+      customerFirstName: customer.firstName || '',
+      customerLastName: customer.lastName || '',
+      customerEmail: customer.email || '',
+      customerPhone: customer.phone || '',
+      customerAddress: customer.address || '',
+      customerCity: customer.city || '',
+      customerCountry: customer.country || '',
+    }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -149,6 +216,104 @@ export function OrderForm({ order, onSave, onCancel }: OrderFormProps) {
                 <span className="text-sm text-muted-foreground">(Read-only for existing orders)</span>
               )}
             </div>
+            
+            {/* Customer Search Autocomplete */}
+            {!order?.customerId && (
+              <div className="relative">
+                <div className="flex items-center justify-between mb-2">
+                  <Label htmlFor="customerSearch">Search Existing Customer</Label>
+                  {selectedCustomerId && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedCustomerId(null);
+                        setCustomerSearch('');
+                        setFormData(prevFormData => ({
+                          ...prevFormData,
+                          customerId: '',
+                          customerFirstName: '',
+                          customerLastName: '',
+                          customerEmail: '',
+                          customerPhone: '',
+                          customerAddress: '',
+                          customerCity: '',
+                          customerCountry: '',
+                        }));
+                      }}
+                      className="text-xs h-6"
+                    >
+                      Clear Selection
+                    </Button>
+                  )}
+                </div>
+                <Input
+                  id="customerSearch"
+                  type="text"
+                  placeholder="Type customer name, phone, or email to search..."
+                  value={customerSearch}
+                  onChange={(e) => {
+                    setCustomerSearch(e.target.value);
+                    setShowCustomerSuggestions(true);
+                    // Clear selection if user starts typing
+                    if (selectedCustomerId && e.target.value !== customerSearch) {
+                      setSelectedCustomerId(null);
+                    }
+                  }}
+                  onFocus={() => {
+                    if (customerSearch.trim()) {
+                      setShowCustomerSuggestions(true);
+                    }
+                  }}
+                  onBlur={() => {
+                    // Delay hiding suggestions to allow click events
+                    setTimeout(() => setShowCustomerSuggestions(false), 200);
+                  }}
+                  className="w-full"
+                />
+                {selectedCustomerId && (
+                  <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                    <span>✓</span> Customer selected - fields below are auto-filled
+                  </p>
+                )}
+                {showCustomerSuggestions && filteredCustomers.length > 0 && (
+                  <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
+                    {filteredCustomers.slice(0, 10).map((customer: any) => {
+                      const customerId = customer.id || customer._id;
+                      const fullName = `${customer.firstName || ''} ${customer.lastName || ''}`.trim();
+                      return (
+                        <div
+                          key={customerId}
+                          className="px-4 py-3 hover:bg-gray-100 cursor-pointer border-b last:border-b-0"
+                          onMouseDown={(e) => {
+                            e.preventDefault(); // Prevent onBlur from firing
+                            handleCustomerSelect(customer);
+                          }}
+                        >
+                          <div className="font-medium">{fullName || 'Unnamed Customer'}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {customer.phone && <span>📞 {customer.phone}</span>}
+                            {customer.email && <span className="ml-2">✉️ {customer.email}</span>}
+                          </div>
+                          {customer.address && (
+                            <div className="text-xs text-muted-foreground mt-1">
+                              {customer.address}{customer.city ? `, ${customer.city}` : ''}{customer.country ? `, ${customer.country}` : ''}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                {showCustomerSuggestions && customerSearch.trim() && filteredCustomers.length === 0 && (
+                  <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg p-4 text-sm text-muted-foreground">
+                    No customers found. You can create a new customer by filling the fields below.
+                  </div>
+                )}
+              </div>
+            )}
+            
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="customerFirstName">First Name *</Label>

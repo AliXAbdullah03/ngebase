@@ -18,7 +18,8 @@ import {
   Clock,
   Globe,
   Zap,
-  ShieldCheck
+  ShieldCheck,
+  CheckCircle
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -30,6 +31,33 @@ export default function Home() {
       <main className="flex-grow pt-20">
         {/* Hero Slider Section */}
         <HeroSlider />
+
+        {/* Testimonials Section */}
+        <TestimonialsSlider />
+
+        {/* Features Checklist Section */}
+        <section className="py-12 bg-gradient-to-br from-violet-50 via-purple-50/30 to-pink-50/20">
+          <div className="container mx-auto px-4">
+            <div className="flex flex-wrap justify-center gap-8 max-w-4xl mx-auto">
+              <div className="flex items-center gap-3 text-foreground">
+                <CheckCircle className="h-6 w-6 text-violet-600 flex-shrink-0" />
+                <span className="text-lg md:text-xl font-semibold">No Minimum Weight</span>
+              </div>
+              <div className="flex items-center gap-3 text-foreground">
+                <CheckCircle className="h-6 w-6 text-violet-600 flex-shrink-0" />
+                <span className="text-lg md:text-xl font-semibold">2-3 Days Delivery</span>
+              </div>
+              <div className="flex items-center gap-3 text-foreground">
+                <CheckCircle className="h-6 w-6 text-violet-600 flex-shrink-0" />
+                <span className="text-lg md:text-xl font-semibold">Real-Time Updates</span>
+              </div>
+              <div className="flex items-center gap-3 text-foreground">
+                <CheckCircle className="h-6 w-6 text-violet-600 flex-shrink-0" />
+                <span className="text-lg md:text-xl font-semibold">100% Insured</span>
+              </div>
+            </div>
+          </div>
+        </section>
 
         {/* Quick Actions Section */}
         <section className="py-16 bg-gradient-violet-subtle border-b">
@@ -73,9 +101,6 @@ export default function Home() {
             </div>
           </div>
         </section>
-
-        {/* Services Section */}
-        <EnhancedServices />
 
         {/* Statistics Section */}
         <StatsSection />
@@ -263,8 +288,8 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Testimonials Section */}
-        <TestimonialsSlider />
+        {/* Services Section */}
+        <EnhancedServices />
 
         {/* Why Choose Us Section */}
         <section className="py-20 bg-white">
@@ -294,8 +319,8 @@ export default function Home() {
                 },
                 {
                   icon: Globe,
-                  title: "Global Network",
-                  description: "150+ countries served with local expertise in every market.",
+                  title: "Family Care",
+                  description: "We treat every shipment as if it were our own. Your trust matters, and we handle your package with genuine care like family.",
                   color: "text-violet-600"
                 }
               ].map((feature, index) => {

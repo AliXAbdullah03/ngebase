@@ -1,7 +1,7 @@
 "use client"
 
 import Link from 'next/link';
-import { Plane, Ship, Truck, ArrowRight, Zap, Shield, Clock, Globe } from 'lucide-react';
+import { Plane, ArrowRight, Zap, Shield, Clock, Globe } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 const services = [
@@ -14,26 +14,6 @@ const services = [
     features: ['Express Delivery', 'Global Coverage', 'Real-time Tracking'],
     gradient: 'from-blue-500/20 to-cyan-500/20',
     iconColor: 'text-blue-500'
-  },
-  {
-    id: 2,
-    title: 'Ocean Freight',
-    description: 'Cost-effective sea freight for large and bulk shipments. Perfect for businesses shipping heavy cargo internationally.',
-    icon: Ship,
-    href: '/services/ocean-freight',
-    features: ['Bulk Shipping', 'Cost Effective', 'Secure Handling'],
-    gradient: 'from-violet-500/20 to-purple-500/20',
-    iconColor: 'text-violet-600'
-  },
-  {
-    id: 3,
-    title: 'Land Transport',
-    description: 'Domestic and cross-border trucking for seamless door-to-door delivery. Reliable ground transportation solutions.',
-    icon: Truck,
-    href: '/services/land-transport',
-    features: ['Door-to-Door', 'Cross-Border', 'Flexible Routes'],
-    gradient: 'from-green-500/20 to-emerald-500/20',
-    iconColor: 'text-green-500'
   }
 ];
 
@@ -58,7 +38,7 @@ export function EnhancedServices() {
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-16 animate-fade-in">
           <h2 className="text-4xl md:text-5xl font-bold mb-4">
-            Our <span className="bg-gradient-to-r from-violet-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">Services</span>
+            <span className="bg-gradient-to-r from-violet-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">Available Service</span>
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
             Comprehensive logistics solutions tailored to your business needs
@@ -82,7 +62,7 @@ export function EnhancedServices() {
           })}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-1 gap-8 max-w-md mx-auto">
           {services.map((service, index) => {
             const Icon = service.icon;
             return (
