@@ -19,18 +19,43 @@ export default function LoginPage() {
 
     try {
       const apiUrl = getApiUrl();
-      const response = await fetch(`${apiUrl}/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
+      const loginUrl = `${apiUrl}/auth/login`;
+      
+      let response: Response;
+      try {
+        response = await fetch(loginUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email, password }),
+        });
+      } catch (fetchError: any) {
+        // Network error - backend not reachable
+        console.error('Network error:', fetchError);
+        if (fetchError.message?.includes('Failed to fetch') || fetchError.name === 'TypeError') {
+          throw new Error(
+            `Cannot connect to backend server. Please ensure the backend is running at ${apiUrl}. ` +
+            `Error: ${fetchError.message || 'Network request failed'}`
+          );
+        }
+        throw fetchError;
+      }
 
-      const result = await response.json();
+      // Check if response is ok before trying to parse JSON
+      let result: any;
+      try {
+        result = await response.json();
+      } catch (jsonError) {
+        // Response is not valid JSON
+        throw new Error(
+          `Invalid response from server (Status: ${response.status}). ` +
+          `Please check if the backend is running correctly at ${apiUrl}`
+        );
+      }
 
       if (!response.ok || !result.success) {
-        throw new Error(result.error?.message || 'Login failed');
+        throw new Error(result.error?.message || result.message || 'Login failed');
       }
 
       // Store token
@@ -54,7 +79,7 @@ export default function LoginPage() {
       }
     } catch (err: any) {
       console.error('Login error:', err);
-      setError(err.message || 'Failed to log in. Please check your credentials.');
+      setError(err.message || 'Failed to log in. Please check your credentials and ensure the backend server is running.');
     } finally {
       setLoading(false);
     }
@@ -78,8 +103,11 @@ export default function LoginPage() {
               <div className="flex-shrink-0">
                 <AlertCircle className="h-5 w-5 text-red-400" />
               </div>
-              <div className="ml-3">
+              <div className="ml-3 flex-1">
                 <p className="text-sm font-medium text-red-800">{error}</p>
+                <p className="text-xs text-red-600 mt-2">
+                  API URL: <code className="bg-red-100 px-1 rounded">{getApiUrl()}/auth/login</code>
+                </p>
               </div>
             </div>
           </div>
