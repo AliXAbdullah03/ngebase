@@ -57,9 +57,8 @@ export function EnhancedHeader() {
               className="h-8 sm:h-10 md:h-12 w-auto transition-transform group-hover:scale-105"
               priority
             />
-            <span className="ml-2 sm:ml-3 text-base sm:text-xl md:text-2xl lg:text-3xl font-bold tracking-tight bg-gradient-to-r from-violet-600 via-purple-600 to-pink-600 bg-clip-text text-transparent transition-colors">
-              <span className="hidden sm:inline">NEXT GLOBAL EXPRESS</span>
-              <span className="sm:hidden">NGE</span>
+            <span className="ml-2 sm:ml-3 text-xs sm:text-xl md:text-2xl lg:text-3xl font-bold tracking-tight bg-gradient-to-r from-violet-600 via-purple-600 to-pink-600 bg-clip-text text-transparent transition-colors whitespace-nowrap">
+              NEXT GLOBAL EXPRESS
             </span>
           </Link>
 

@@ -18,9 +18,8 @@ export default function LandTransportPage() {
                             className="h-8 sm:h-10 md:h-12 w-auto"
                             priority
                         />
-                        <span className="ml-2 sm:ml-3 text-base sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-violet-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                            <span className="hidden sm:inline">NEXT GLOBAL EXPRESS</span>
-                            <span className="sm:hidden">NGE</span>
+                        <span className="ml-2 sm:ml-3 text-xs sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-violet-600 via-purple-600 to-pink-600 bg-clip-text text-transparent whitespace-nowrap">
+                            NEXT GLOBAL EXPRESS
                         </span>
                     </Link>
                     <Button asChild variant="outline" className="w-full sm:w-auto text-xs sm:text-sm">
