@@ -318,24 +318,24 @@ export default function TrackShipmentPage() {
       
       // Tracking Number
       doc.setFontSize(12);
-      doc.setFont(undefined, 'bold');
+      doc.setFont('helvetica', 'bold');
       doc.text(`${isOrder ? 'Order Number' : 'Tracking Number'}:`, margin, yPos);
-      doc.setFont(undefined, 'normal');
+      doc.setFont('helvetica', 'normal');
       doc.text(trackingNumber, margin + 60, yPos);
       yPos += 10;
       
       // Status
-      doc.setFont(undefined, 'bold');
+      doc.setFont('helvetica', 'bold');
       doc.text('Status:', margin, yPos);
-      doc.setFont(undefined, 'normal');
+      doc.setFont('helvetica', 'normal');
       doc.text(currentStatusLabel, margin + 30, yPos);
       yPos += 10;
       
       // Customer Information
-      doc.setFont(undefined, 'bold');
+      doc.setFont('helvetica', 'bold');
       doc.text('Customer Information:', margin, yPos);
       yPos += 8;
-      doc.setFont(undefined, 'normal');
+      doc.setFont('helvetica', 'normal');
       doc.text(`Name: ${customerName}`, margin, yPos);
       yPos += 7;
       if (customer?.email) {
@@ -355,10 +355,10 @@ export default function TrackShipmentPage() {
       
       // Receiver Information
       if (receiver && (receiver.firstName || receiver.name)) {
-        doc.setFont(undefined, 'bold');
+        doc.setFont('helvetica', 'bold');
         doc.text('Receiver Information:', margin, yPos);
         yPos += 8;
-        doc.setFont(undefined, 'normal');
+        doc.setFont('helvetica', 'normal');
         const receiverName = receiver.firstName && receiver.lastName 
           ? `${receiver.firstName} ${receiver.lastName}`
           : receiver.name || receiver.email || 'N/A';
@@ -374,9 +374,9 @@ export default function TrackShipmentPage() {
       
       // Dates
       if (order?.departureDate || shipment?.departureDate) {
-        doc.setFont(undefined, 'bold');
+        doc.setFont('helvetica', 'bold');
         doc.text('Departure Date:', margin, yPos);
-        doc.setFont(undefined, 'normal');
+        doc.setFont('helvetica', 'normal');
         doc.text(
           new Date(order?.departureDate || shipment?.departureDate).toLocaleDateString('en-US', { 
             month: 'long', 
@@ -390,9 +390,9 @@ export default function TrackShipmentPage() {
       }
       
       if (order?.createdAt || shipment?.createdAt) {
-        doc.setFont(undefined, 'bold');
+        doc.setFont('helvetica', 'bold');
         doc.text('Order Date:', margin, yPos);
-        doc.setFont(undefined, 'normal');
+        doc.setFont('helvetica', 'normal');
         doc.text(
           new Date(order?.createdAt || shipment?.createdAt).toLocaleDateString('en-US', { 
             month: 'long', 
@@ -408,20 +408,20 @@ export default function TrackShipmentPage() {
       // Items/Parcels
       if (items.length > 0) {
         yPos += 5;
-        doc.setFont(undefined, 'bold');
+        doc.setFont('helvetica', 'bold');
         doc.text(`${isOrder ? 'Order Items' : 'Cargo Details'}:`, margin, yPos);
         yPos += 8;
-        doc.setFont(undefined, 'normal');
+        doc.setFont('helvetica', 'normal');
         
         items.forEach((item: any, index: number) => {
           if (yPos > 250) {
             doc.addPage();
             yPos = 20;
           }
-          doc.setFont(undefined, 'bold');
+          doc.setFont('helvetica', 'bold');
           doc.text(`${isOrder ? 'Item' : 'Parcel'} ${index + 1}:`, margin, yPos);
           yPos += 7;
-          doc.setFont(undefined, 'normal');
+          doc.setFont('helvetica', 'normal');
           if (item.description || item.items) {
             const descLines = doc.splitTextToSize(`Description: ${item.description || item.items}`, maxWidth - margin);
             doc.text(descLines, margin, yPos);
@@ -442,10 +442,10 @@ export default function TrackShipmentPage() {
           doc.addPage();
           yPos = 20;
         }
-        doc.setFont(undefined, 'bold');
+        doc.setFont('helvetica', 'bold');
         doc.text('Tracking History:', margin, yPos);
         yPos += 8;
-        doc.setFont(undefined, 'normal');
+        doc.setFont('helvetica', 'normal');
         
         history.forEach((event, index) => {
           if (yPos > 250) {
@@ -453,10 +453,10 @@ export default function TrackShipmentPage() {
             yPos = 20;
           }
           const statusText = event.status === 'Processing' ? 'Shipment Received' : event.status;
-          doc.setFont(undefined, 'bold');
+          doc.setFont('helvetica', 'bold');
           doc.text(`${index + 1}. ${statusText}`, margin, yPos);
           yPos += 7;
-          doc.setFont(undefined, 'normal');
+          doc.setFont('helvetica', 'normal');
           doc.text(`Date: ${new Date(event.date).toLocaleString('en-US', { 
             dateStyle: 'medium', 
             timeStyle: 'short' 
