@@ -36,33 +36,33 @@ export default function Home() {
         <TestimonialsSlider />
 
         {/* Features Checklist Section */}
-        <section className="py-12 bg-gradient-to-br from-violet-50 via-purple-50/30 to-pink-50/20">
+        <section className="py-8 sm:py-12 bg-gradient-to-br from-violet-50 via-purple-50/30 to-pink-50/20">
           <div className="container mx-auto px-4">
-            <div className="flex flex-wrap justify-center gap-8 max-w-4xl mx-auto">
-              <div className="flex items-center gap-3 text-foreground">
-                <CheckCircle className="h-6 w-6 text-violet-600 flex-shrink-0" />
-                <span className="text-lg md:text-xl font-semibold">No Minimum Weight</span>
+            <div className="flex flex-wrap justify-center gap-4 sm:gap-6 md:gap-8 max-w-4xl mx-auto">
+              <div className="flex items-center gap-2 sm:gap-3 text-foreground">
+                <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-violet-600 flex-shrink-0" />
+                <span className="text-sm sm:text-base md:text-lg lg:text-xl font-semibold">No Minimum Weight</span>
               </div>
-              <div className="flex items-center gap-3 text-foreground">
-                <CheckCircle className="h-6 w-6 text-violet-600 flex-shrink-0" />
-                <span className="text-lg md:text-xl font-semibold">2-3 Days Delivery</span>
+              <div className="flex items-center gap-2 sm:gap-3 text-foreground">
+                <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-violet-600 flex-shrink-0" />
+                <span className="text-sm sm:text-base md:text-lg lg:text-xl font-semibold">2-3 Days Delivery</span>
               </div>
-              <div className="flex items-center gap-3 text-foreground">
-                <CheckCircle className="h-6 w-6 text-violet-600 flex-shrink-0" />
-                <span className="text-lg md:text-xl font-semibold">Real-Time Updates</span>
+              <div className="flex items-center gap-2 sm:gap-3 text-foreground">
+                <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-violet-600 flex-shrink-0" />
+                <span className="text-sm sm:text-base md:text-lg lg:text-xl font-semibold">Real-Time Updates</span>
               </div>
-              <div className="flex items-center gap-3 text-foreground">
-                <CheckCircle className="h-6 w-6 text-violet-600 flex-shrink-0" />
-                <span className="text-lg md:text-xl font-semibold">100% Insured</span>
+              <div className="flex items-center gap-2 sm:gap-3 text-foreground">
+                <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-violet-600 flex-shrink-0" />
+                <span className="text-sm sm:text-base md:text-lg lg:text-xl font-semibold">100% Insured</span>
               </div>
             </div>
           </div>
         </section>
 
         {/* Quick Actions Section */}
-        <section className="py-16 bg-gradient-violet-subtle border-b">
+        <section className="py-12 sm:py-16 bg-gradient-violet-subtle border-b">
           <div className="container mx-auto px-4">
-            <div className="flex flex-wrap justify-center gap-6 max-w-4xl mx-auto">
+            <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-4 sm:gap-6 max-w-4xl mx-auto">
               <Link href="/business-shipment" className="group w-full max-w-sm">
                 <Card className="h-full border-2 hover:border-violet-500/50 transition-all duration-300 hover:shadow-xl hover:-translate-y-2 bg-gradient-to-br from-violet-50/50 via-white to-purple-50/50">
                   <CardContent className="p-6 text-center">
@@ -128,16 +128,16 @@ export default function Home() {
             </div>
 
             <Tabs defaultValue="dubai" className="w-full max-w-6xl mx-auto">
-              <TabsList className="grid w-full grid-cols-2 bg-transparent p-0 mb-8 h-auto">
+              <TabsList className="grid w-full grid-cols-2 bg-transparent p-0 mb-6 sm:mb-8 h-auto gap-2 sm:gap-0">
                 <TabsTrigger 
                   value="dubai" 
-                  className="data-[state=active]:bg-gradient-violet data-[state=active]:text-white data-[state=inactive]:bg-white/80 py-4 text-lg font-semibold transition-all"
+                  className="data-[state=active]:bg-gradient-violet data-[state=active]:text-white data-[state=inactive]:bg-white/80 py-2 sm:py-3 md:py-4 text-sm sm:text-base md:text-lg font-semibold transition-all"
                 >
                   Dubai, UAE
                 </TabsTrigger>
                 <TabsTrigger 
                   value="manila" 
-                  className="data-[state=active]:bg-gradient-violet data-[state=active]:text-white data-[state=inactive]:bg-white/80 py-4 text-lg font-semibold transition-all"
+                  className="data-[state=active]:bg-gradient-violet data-[state=active]:text-white data-[state=inactive]:bg-white/80 py-2 sm:py-3 md:py-4 text-sm sm:text-base md:text-lg font-semibold transition-all"
                 >
                   Manila, Philippines
                 </TabsTrigger>
@@ -145,8 +145,8 @@ export default function Home() {
 
               <TabsContent value="dubai" className="animate-fade-in">
                 <Card className="bg-white/90 backdrop-blur-sm border-2 shadow-xl">
-                  <CardContent className="p-8">
-                    <div className="grid md:grid-cols-2 gap-8">
+                  <CardContent className="p-4 sm:p-6 md:p-8">
+                    <div className="grid md:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
                       <div className="space-y-6">
                         <div>
                           <h3 className="text-3xl font-bold mb-2 bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">DUBAI HUB</h3>
@@ -179,21 +179,21 @@ export default function Home() {
                             </div>
                           </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 gap-2 sm:gap-4">
                           <Card className="bg-gradient-to-br from-violet-100 to-purple-100 border-violet-300/30">
-                            <CardContent className="p-4 text-center">
-                              <Clock className="w-6 h-6 text-violet-600 mx-auto mb-2" />
-                              <p className="font-semibold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">Operating Time</p>
-                              <p className="text-sm mt-1">EVERYDAY</p>
-                              <p className="text-sm font-medium">9 AM - 6 PM</p>
+                            <CardContent className="p-3 sm:p-4 text-center">
+                              <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-violet-600 mx-auto mb-2" />
+                              <p className="text-xs sm:text-sm font-semibold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">Operating Time</p>
+                              <p className="text-xs mt-1">EVERYDAY</p>
+                              <p className="text-xs sm:text-sm font-medium">9 AM - 6 PM</p>
                             </CardContent>
                           </Card>
                           <Card className="bg-gradient-to-br from-violet-100 to-purple-100 border-violet-300/30">
-                            <CardContent className="p-4 text-center">
-                              <Globe className="w-6 h-6 text-violet-600 mx-auto mb-2" />
-                              <p className="font-semibold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">Time Zone</p>
-                              <p className="text-sm mt-1">UAE Time Zone</p>
-                              <p className="text-sm font-medium">GMT+4</p>
+                            <CardContent className="p-3 sm:p-4 text-center">
+                              <Globe className="w-5 h-5 sm:w-6 sm:h-6 text-violet-600 mx-auto mb-2" />
+                              <p className="text-xs sm:text-sm font-semibold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">Time Zone</p>
+                              <p className="text-xs mt-1">UAE Time Zone</p>
+                              <p className="text-xs sm:text-sm font-medium">GMT+4</p>
                             </CardContent>
                           </Card>
                         </div>
@@ -203,7 +203,7 @@ export default function Home() {
                           src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3608.026933303158!2d55.385!3d25.269!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3e5f5c5b5f5f5f5f%3A0x3f3f3f3f3f3f3f3f!2sDubai!5e0!3m2!1sen!2sae!4v1622712345678" 
                           width="100%" 
                           height="100%" 
-                          style={{border:0, minHeight: '400px'}} 
+                          style={{border:0, minHeight: '250px'}} 
                           allowFullScreen={true} 
                           loading="lazy"
                           className="w-full"
@@ -303,7 +303,7 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8 max-w-6xl mx-auto">
               {[
                 {
                   icon: Zap,
@@ -331,14 +331,14 @@ export default function Home() {
                     className="border-2 hover:border-violet-500/50 transition-all duration-300 hover:shadow-xl hover:-translate-y-2 text-center"
                     style={{ animation: `fadeIn 0.8s ease-out ${index * 0.15}s both` }}
                   >
-                    <CardContent className="p-8">
-                      <div className="flex justify-center mb-6">
-                        <div className={`p-4 rounded-full bg-gradient-to-br from-violet-100 to-purple-100 ${feature.color}`}>
-                          <Icon className="w-10 h-10" />
+                    <CardContent className="p-4 sm:p-6 md:p-8">
+                      <div className="flex justify-center mb-4 sm:mb-6">
+                        <div className={`p-3 sm:p-4 rounded-full bg-gradient-to-br from-violet-100 to-purple-100 ${feature.color}`}>
+                          <Icon className="w-8 h-8 sm:w-10 sm:h-10" />
                         </div>
                       </div>
-                      <h3 className="text-2xl font-bold mb-4">{feature.title}</h3>
-                      <p className="text-muted-foreground leading-relaxed">{feature.description}</p>
+                      <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">{feature.title}</h3>
+                      <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">{feature.description}</p>
                     </CardContent>
                   </Card>
                 );

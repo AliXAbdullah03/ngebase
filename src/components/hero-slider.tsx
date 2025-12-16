@@ -109,43 +109,43 @@ export function HeroSlider() {
       </div>
 
       {/* Content */}
-      <div className="container mx-auto px-4 md:px-6 relative z-10 grid lg:grid-cols-2 gap-12 items-center pt-48 pb-20">
-        <div className="space-y-6 animate-slide-in-left">
-          <div className="space-y-4">
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight">
+      <div className="container mx-auto px-4 md:px-6 relative z-10 grid lg:grid-cols-2 gap-8 md:gap-12 items-center pt-24 sm:pt-32 md:pt-40 lg:pt-48 pb-12 md:pb-20">
+        <div className="space-y-4 md:space-y-6 animate-slide-in-left">
+          <div className="space-y-3 md:space-y-4">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight leading-[1.1] sm:leading-[1.15] md:leading-[1.2]">
               <span className="block">Fast. Reliable. Secure.</span>
-              <span className="block bg-gradient-to-r from-violet-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+              <span className="block bg-gradient-to-r from-violet-600 via-purple-600 to-pink-600 bg-clip-text text-transparent pb-1 sm:pb-2">
                 Your Trusted Logistics Partner
               </span>
             </h1>
           </div>
 
           {/* Tracking Search */}
-          <div className="mt-10 space-y-3">
+          <div className="mt-6 md:mt-10 space-y-2 md:space-y-3">
             <div>
-              <h3 className="text-2xl font-bold text-foreground mb-1">Track Your Shipment</h3>
-              <p className="text-sm text-muted-foreground">Enter your tracking number to get real-time updates</p>
+              <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground mb-1">Track Your Shipment</h3>
+              <p className="text-xs sm:text-sm text-muted-foreground">Enter your tracking number to get real-time updates</p>
             </div>
             <div className="relative group">
               <div className="absolute -inset-0.5 bg-gradient-to-r from-violet-500 via-purple-500 to-pink-500 rounded-xl opacity-20 group-hover:opacity-30 blur transition-opacity duration-300"></div>
-              <div className="relative flex items-center gap-0 border-2 border-violet-300/30 rounded-xl bg-white/95 backdrop-blur-md shadow-xl hover:shadow-2xl hover:border-violet-500/50 transition-all duration-300 max-w-2xl overflow-hidden">
-                <div className="flex items-center px-4 py-3 bg-gradient-to-r from-violet-50 to-purple-50 border-r border-violet-200/30">
-                  <Search className="h-5 w-5 text-violet-600 flex-shrink-0" />
+              <div className="relative flex flex-col sm:flex-row items-stretch sm:items-center gap-0 border-2 border-violet-300/30 rounded-xl bg-white/95 backdrop-blur-md shadow-xl hover:shadow-2xl hover:border-violet-500/50 transition-all duration-300 max-w-2xl overflow-hidden">
+                <div className="flex items-center px-3 sm:px-4 py-2 sm:py-3 bg-gradient-to-r from-violet-50 to-purple-50 border-b sm:border-b-0 sm:border-r border-violet-200/30">
+                  <Search className="h-4 w-4 sm:h-5 sm:w-5 text-violet-600 flex-shrink-0" />
                 </div>
-                <div className="flex-grow">
+                <div className="flex-grow min-w-0">
                   <TrackingSearch />
                 </div>
               </div>
             </div>
-            <p className="text-xs text-muted-foreground flex items-center gap-1">
+            <p className="text-xs text-muted-foreground flex flex-wrap items-center gap-1">
               <span>Example:</span>
-              <code className="px-2 py-0.5 bg-gradient-to-r from-violet-100 to-purple-100 rounded text-violet-600 font-mono text-xs">NGE123456789</code>
+              <code className="px-2 py-0.5 bg-gradient-to-r from-violet-100 to-purple-100 rounded text-violet-600 font-mono text-xs break-all">NGE123456789</code>
             </p>
           </div>
         </div>
 
         {/* Right Side - Image Slider */}
-        <div className="hidden lg:block relative w-full h-[600px] animate-slide-in-right">
+        <div className="hidden lg:block relative w-full h-[500px] xl:h-[600px] animate-slide-in-right">
           <div className="absolute inset-0 bg-gradient-to-br from-violet-400/20 to-purple-400/10 rounded-3xl blur-3xl -z-10"></div>
           <Carousel
             setApi={setApi}
@@ -153,12 +153,12 @@ export function HeroSlider() {
               align: "start",
               loop: true,
             }}
-            className="w-full h-[600px] relative"
+            className="w-full h-[500px] xl:h-[600px] relative"
           >
-            <CarouselContent className="h-[600px] -ml-0">
+            <CarouselContent className="h-[500px] xl:h-[600px] -ml-0">
               {heroImages.map((item, index) => (
-                <CarouselItem key={item.id} className="pl-0 basis-full h-[600px]">
-                  <div className="relative w-full h-[600px] rounded-2xl overflow-hidden bg-transparent border-transparent">
+                <CarouselItem key={item.id} className="pl-0 basis-full h-[500px] xl:h-[600px]">
+                  <div className="relative w-full h-[500px] xl:h-[600px] rounded-2xl overflow-hidden bg-transparent border-transparent">
                     <Image
                       src={item.image}
                       alt={item.title}

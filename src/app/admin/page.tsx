@@ -185,95 +185,96 @@ export default function AdminPage() {
 
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0 w-full">
-        <header className="w-full border-b bg-gradient-to-r from-violet-600 via-purple-600 to-pink-600 px-4 md:px-6 py-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between shadow-lg">
-              <div>
-            <p className="text-sm text-violet-100 font-medium">Control Center</p>
-            <h1 className="text-2xl font-semibold text-white">Admin Dashboard</h1>
-            <p className="text-sm text-violet-100">
+        <header className="w-full border-b bg-gradient-to-r from-violet-600 via-purple-600 to-pink-600 px-3 sm:px-4 md:px-6 py-3 sm:py-4 flex flex-col gap-2 sm:gap-3 md:flex-row md:items-center md:justify-between shadow-lg">
+              <div className="min-w-0 flex-1">
+            <p className="text-xs sm:text-sm text-violet-100 font-medium">Control Center</p>
+            <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-white">Admin Dashboard</h1>
+            <p className="text-xs sm:text-sm text-violet-100 hidden sm:block">
               Manage your logistics operations, customers, orders, and site content in one place.
                 </p>
               </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-sm px-3 py-1 bg-white/20 text-white border-white/30 hover:bg-white/30">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+            <Badge variant="outline" className="text-xs sm:text-sm px-2 sm:px-3 py-0.5 sm:py-1 bg-white/20 text-white border-white/30 hover:bg-white/30">
                   {currentUser?.role || 'User'}
                 </Badge>
                 <Button 
                   onClick={() => setDashboardRefreshSignal((value) => value + 1)}
                   variant="outline"
-              className="flex items-center gap-2 bg-white/10 text-white border-white/30 hover:bg-white/20"
+              className="flex items-center gap-1 sm:gap-2 bg-white/10 text-white border-white/30 hover:bg-white/20 text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2 h-8 sm:h-10"
                 >
-                  <RefreshCw className="w-4 h-4" />
-                  <span>Refresh</span>
+                  <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span className="hidden sm:inline">Refresh</span>
                 </Button>
                 <Button 
                   onClick={handleHome}
                   variant="outline"
-              className="flex items-center gap-2 bg-white/10 text-white border-white/30 hover:bg-white/20"
+              className="flex items-center gap-1 sm:gap-2 bg-white/10 text-white border-white/30 hover:bg-white/20 text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2 h-8 sm:h-10"
                 >
-                  <Home className="w-4 h-4" />
-                  <span>Logout</span>
+                  <Home className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span className="hidden sm:inline">Logout</span>
                 </Button>
               </div>
         </header>
 
         {/* Mobile nav */}
-        <div className="lg:hidden border-b bg-gradient-to-r from-violet-600 via-purple-600 to-pink-600 px-4 py-3 shadow-md">
-          <TabsList className="flex flex-wrap gap-2 bg-transparent border-0 shadow-none p-0">
+        <div className="lg:hidden border-b bg-gradient-to-r from-violet-600 via-purple-600 to-pink-600 px-2 sm:px-4 py-2 sm:py-3 shadow-md overflow-x-auto">
+          <TabsList className="flex flex-nowrap sm:flex-wrap gap-1.5 sm:gap-2 bg-transparent border-0 shadow-none p-0 min-w-max sm:min-w-0">
               {!isDriver && (
-              <TabsTrigger value="dashboard" className="flex items-center gap-2 rounded-lg px-3 py-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:to-purple-600 data-[state=active]:text-white">
-                  <BarChart3 className="w-4 h-4" />
-                <span>Dashboard</span>
+              <TabsTrigger value="dashboard" className="flex items-center gap-1 sm:gap-2 rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-white hover:text-white/80 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:to-purple-600 data-[state=active]:text-white whitespace-nowrap">
+                  <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+                <span className="hidden xs:inline text-white">Dashboard</span>
+                <span className="xs:hidden text-white">Dash</span>
                 </TabsTrigger>
               )}
               {!isDriver && (
-              <TabsTrigger value="customers" className="flex items-center gap-2 rounded-lg px-3 py-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:to-purple-600 data-[state=active]:text-white">
-                  <Users className="w-4 h-4" />
-                <span>Customers</span>
+              <TabsTrigger value="customers" className="flex items-center gap-2 rounded-lg px-3 py-2 text-white hover:text-white/80 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:to-purple-600 data-[state=active]:text-white">
+                  <Users className="w-4 h-4 text-white" />
+                <span className="text-white">Customers</span>
                 </TabsTrigger>
               )}
-            <TabsTrigger value="orders" className="flex items-center gap-2 rounded-lg px-3 py-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:to-purple-600 data-[state=active]:text-white">
-                <ShoppingCart className="w-4 h-4" />
-              <span>Orders</span>
+            <TabsTrigger value="orders" className="flex items-center gap-2 rounded-lg px-3 py-2 text-white hover:text-white/80 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:to-purple-600 data-[state=active]:text-white">
+                <ShoppingCart className="w-4 h-4 text-white" />
+              <span className="text-white">Orders</span>
               </TabsTrigger>
               {!isDriver && (
-              <TabsTrigger value="shipments" className="flex items-center gap-2 rounded-lg px-3 py-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:to-purple-600 data-[state=active]:text-white">
-                <Package className="w-4 h-4" />
-                <span>Shipments</span>
+              <TabsTrigger value="shipments" className="flex items-center gap-2 rounded-lg px-3 py-2 text-white hover:text-white/80 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:to-purple-600 data-[state=active]:text-white">
+                <Package className="w-4 h-4 text-white" />
+                <span className="text-white">Shipments</span>
               </TabsTrigger>
               )}
-            <TabsTrigger value="branches" className="flex items-center gap-2 rounded-lg px-3 py-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:to-purple-600 data-[state=active]:text-white">
-              <Building2 className="w-4 h-4" />
-              <span>Branches</span>
+            <TabsTrigger value="branches" className="flex items-center gap-2 rounded-lg px-3 py-2 text-white hover:text-white/80 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:to-purple-600 data-[state=active]:text-white">
+              <Building2 className="w-4 h-4 text-white" />
+              <span className="text-white">Branches</span>
             </TabsTrigger>
             {!isDriver && (
-              <TabsTrigger value="hubs" className="flex items-center gap-2 rounded-lg px-3 py-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:to-purple-600 data-[state=active]:text-white">
-                <MapPin className="w-4 h-4" />
-                <span>Hubs</span>
+              <TabsTrigger value="hubs" className="flex items-center gap-2 rounded-lg px-3 py-2 text-white hover:text-white/80 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:to-purple-600 data-[state=active]:text-white">
+                <MapPin className="w-4 h-4 text-white" />
+                <span className="text-white">Hubs</span>
               </TabsTrigger>
             )}
               {hasPermission(currentUser, Permissions.USER_VIEW) && (
-              <TabsTrigger value="users" className="flex items-center gap-2 rounded-lg px-3 py-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:to-purple-600 data-[state=active]:text-white">
-                  <UserCog className="w-4 h-4" />
-                <span>Users</span>
+              <TabsTrigger value="users" className="flex items-center gap-2 rounded-lg px-3 py-2 text-white hover:text-white/80 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:to-purple-600 data-[state=active]:text-white">
+                  <UserCog className="w-4 h-4 text-white" />
+                <span className="text-white">Users</span>
                 </TabsTrigger>
               )}
               {hasPermission(currentUser, Permissions.USER_VIEW) && (
-              <TabsTrigger value="roles" className="flex items-center gap-2 rounded-lg px-3 py-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:to-purple-600 data-[state=active]:text-white">
-                  <Shield className="w-4 h-4" />
-                <span>Roles</span>
+              <TabsTrigger value="roles" className="flex items-center gap-2 rounded-lg px-3 py-2 text-white hover:text-white/80 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:to-purple-600 data-[state=active]:text-white">
+                  <Shield className="w-4 h-4 text-white" />
+                <span className="text-white">Roles</span>
                 </TabsTrigger>
               )}
               {hasPermission(currentUser, Permissions.FRONTEND_EDIT) && (
-              <TabsTrigger value="webpage" className="flex items-center gap-2 rounded-lg px-3 py-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:to-purple-600 data-[state=active]:text-white">
-                  <Globe className="w-4 h-4" />
-                <span>Web Page</span>
+              <TabsTrigger value="webpage" className="flex items-center gap-2 rounded-lg px-3 py-2 text-white hover:text-white/80 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:to-purple-600 data-[state=active]:text-white">
+                  <Globe className="w-4 h-4 text-white" />
+                <span className="text-white">Web Page</span>
                 </TabsTrigger>
               )}
             </TabsList>
         </div>
 
         {/* Content */}
-        <div className="p-4 md:p-6 space-y-6 w-full max-w-none">
+        <div className="p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 w-full max-w-none overflow-x-hidden">
             {!isDriver && (
               <TabsContent value="dashboard">
                 <DashboardTab 
@@ -1181,51 +1182,57 @@ function CustomerManagementTab() {
             </div>
           ) : (
             <>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Phone</TableHead>
-                    <TableHead>Address</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {customers.map((customer) => (
-                    <TableRow key={customer.id || customer._id}>
-                      <TableCell className="font-medium">
-                        {customer.firstName} {customer.lastName}
-                      </TableCell>
-                      <TableCell>{customer.email || 'N/A'}</TableCell>
-                      <TableCell>{customer.phone || 'N/A'}</TableCell>
-                      <TableCell className="max-w-xs truncate">
-                        {customer.address || customer.city || 'N/A'}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            title="Edit"
-                            onClick={() => setEditingCustomer(customer)}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            title="Delete"
-                            onClick={() => handleDelete(customer.id || customer._id)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+          <div className="overflow-x-auto -mx-3 sm:mx-0">
+            <div className="inline-block min-w-full align-middle">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                        <TableHead className="min-w-[120px]">Name</TableHead>
+                        <TableHead className="min-w-[150px]">Email</TableHead>
+                        <TableHead className="min-w-[120px]">Phone</TableHead>
+                        <TableHead className="min-w-[150px]">Address</TableHead>
+                        <TableHead className="min-w-[120px]">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {customers.map((customer) => (
+                        <TableRow key={customer.id || customer._id}>
+                          <TableCell className="font-medium">
+                            {customer.firstName} {customer.lastName}
+                          </TableCell>
+                          <TableCell className="break-all">{customer.email || 'N/A'}</TableCell>
+                          <TableCell>{customer.phone || 'N/A'}</TableCell>
+                          <TableCell className="max-w-xs truncate">
+                            {customer.address || customer.city || 'N/A'}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-1 sm:gap-2">
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                title="Edit"
+                                onClick={() => setEditingCustomer(customer)}
+                                className="h-8 w-8 sm:h-10 sm:w-10"
+                              >
+                                <Edit className="w-3 h-3 sm:w-4 sm:h-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                title="Delete"
+                                onClick={() => handleDelete(customer.id || customer._id)}
+                                className="h-8 w-8 sm:h-10 sm:w-10"
+                              >
+                                <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
               
               {/* Pagination */}
               {totalPages > 1 && (
@@ -2081,18 +2088,20 @@ function OrdersTab({ currentUser, openCreateForm: initialOpenForm = false, onFor
             </div>
           ) : (
             <>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Tracking ID</TableHead>
-                    <TableHead>Customer</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Departure Date</TableHead>
-                <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+              <div className="overflow-x-auto -mx-3 sm:mx-0">
+                <div className="inline-block min-w-full align-middle">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="min-w-[120px]">Tracking ID</TableHead>
+                        <TableHead className="min-w-[150px]">Customer</TableHead>
+                        <TableHead className="min-w-[100px]">Date</TableHead>
+                        <TableHead className="min-w-[120px]">Departure Date</TableHead>
+                    <TableHead className="min-w-[120px]">Status</TableHead>
+                        <TableHead className="min-w-[150px]">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {orders.map((order) => {
                     const orderId = order.id || order._id;
                     const orderDate = order.createdAt ? new Date(order.createdAt) : (order.date ? new Date(order.date) : new Date());
@@ -2186,8 +2195,10 @@ function OrdersTab({ currentUser, openCreateForm: initialOpenForm = false, onFor
                 </TableRow>
                     );
                   })}
-            </TableBody>
-          </Table>
+                </TableBody>
+              </Table>
+            </div>
+          </div>
               
               {/* Pagination */}
               {totalPages > 1 && (
@@ -2640,26 +2651,28 @@ function ShipmentsTab({ currentUser }: { currentUser: any }) {
             </div>
           ) : (
             <>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    {hasPermission(currentUser, Permissions.SHIPMENT_BULK_UPDATE) && (
-                      <TableHead className="w-12">
+              <div className="overflow-x-auto -mx-3 sm:mx-0">
+                <div className="inline-block min-w-full align-middle">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        {hasPermission(currentUser, Permissions.SHIPMENT_BULK_UPDATE) && (
+                          <TableHead className="w-12">
                         <Checkbox
                           checked={selectedShipments.length === shipments.length && shipments.length > 0}
                           onCheckedChange={selectAll}
                         />
                       </TableHead>
                     )}
-                    <TableHead>Batch/Shipment ID</TableHead>
-                    <TableHead>Departure Date</TableHead>
-                    <TableHead>Orders Count</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Created Date</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
+                        <TableHead className="min-w-[150px]">Batch/Shipment ID</TableHead>
+                        <TableHead className="min-w-[120px]">Departure Date</TableHead>
+                        <TableHead className="min-w-[100px]">Orders Count</TableHead>
+                        <TableHead className="min-w-[120px]">Status</TableHead>
+                        <TableHead className="min-w-[120px]">Created Date</TableHead>
+                        <TableHead className="min-w-[150px]">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
                   {shipments.map((shipment) => {
                     const shipmentId = shipment.id || shipment._id;
                     // Get batchNumber from Shipment Collection
@@ -2857,6 +2870,8 @@ function ShipmentsTab({ currentUser }: { currentUser: any }) {
                   })}
                 </TableBody>
               </Table>
+                </div>
+              </div>
               
               {/* Pagination */}
               {totalPages > 1 && (
@@ -3975,18 +3990,20 @@ function UserManagementTab({ currentUser }: { currentUser: any }) {
               </div>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Branch</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <div className="overflow-x-auto -mx-3 sm:mx-0">
+              <div className="inline-block min-w-full align-middle">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="min-w-[120px]">Name</TableHead>
+                      <TableHead className="min-w-[150px]">Email</TableHead>
+                      <TableHead className="min-w-[100px]">Role</TableHead>
+                      <TableHead className="min-w-[120px]">Branch</TableHead>
+                      <TableHead className="min-w-[100px]">Status</TableHead>
+                      <TableHead className="min-w-[150px]">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                 {users.map((user) => {
                   const userId = user.id || user._id;
                   // Backend returns role in roleId object: { _id: "...", name: "..." }
@@ -4082,8 +4099,10 @@ function UserManagementTab({ currentUser }: { currentUser: any }) {
                     </TableRow>
                   );
                 })}
-              </TableBody>
-            </Table>
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>

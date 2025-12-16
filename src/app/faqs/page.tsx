@@ -169,21 +169,21 @@ export default function FAQsPage() {
                   <HelpCircle className="w-16 h-16 text-primary" />
                 </div>
               </div>
-              <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent px-4">
                 Frequently Asked Questions
               </h1>
-              <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+              <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
                 Find answers to common questions about our shipping services, tracking, payments, and more.
               </p>
               
               {/* Search Bar */}
-              <div className="max-w-2xl mx-auto mb-8">
+              <div className="max-w-2xl mx-auto mb-6 sm:mb-8 px-4">
                 <div className="relative">
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+                  <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 sm:w-5 sm:h-5" />
                   <input
                     type="text"
                     placeholder="Search for questions..."
-                    className="w-full pl-12 pr-4 py-4 rounded-lg border-2 border-primary/20 focus:border-primary focus:outline-none bg-white shadow-lg"
+                    className="w-full pl-10 sm:pl-12 pr-4 py-3 sm:py-4 rounded-lg border-2 border-primary/20 focus:border-primary focus:outline-none bg-white shadow-lg text-sm sm:text-base"
                     id="faq-search"
                   />
                 </div>
@@ -198,10 +198,10 @@ export default function FAQsPage() {
             <div className="max-w-4xl mx-auto space-y-12">
               {faqCategories.map((category, categoryIndex) => (
                 <Card key={categoryIndex} className="border-2 border-primary/10 shadow-lg">
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-3 mb-6">
-                      <span className="text-3xl">{category.icon}</span>
-                      <h2 className="text-2xl md:text-3xl font-bold">{category.title}</h2>
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+                      <span className="text-2xl sm:text-3xl">{category.icon}</span>
+                      <h2 className="text-xl sm:text-2xl md:text-3xl font-bold">{category.title}</h2>
                     </div>
                     <Accordion type="single" collapsible className="w-full">
                       {category.questions.map((faq, faqIndex) => (

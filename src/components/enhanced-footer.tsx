@@ -65,8 +65,8 @@ export function EnhancedFooter() {
         }}></div>
       </div>
 
-      <div className="container mx-auto px-4 md:px-6 py-16 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 mb-12">
+      <div className="container mx-auto px-4 md:px-6 py-8 sm:py-12 md:py-16 relative z-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-5 gap-6 sm:gap-8 md:gap-12 mb-8 sm:mb-12">
           {/* Company Info */}
           <div className="lg:col-span-2">
             <Link href="/" className="inline-block mb-6">
@@ -79,8 +79,9 @@ export function EnhancedFooter() {
                   className="h-14 w-auto"
                   priority
                 />
-                <span className="text-2xl font-bold tracking-tight bg-gradient-to-r from-violet-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-                NEXT GLOBAL EXPRESS
+                <span className="text-lg sm:text-xl md:text-2xl font-bold tracking-tight bg-gradient-to-r from-violet-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                <span className="hidden sm:inline">NEXT GLOBAL EXPRESS</span>
+                <span className="sm:hidden">NGE</span>
                 </span>
               </div>
             </Link>

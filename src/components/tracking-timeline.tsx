@@ -20,6 +20,14 @@ const statusColors: Record<ShipmentStatus, string> = {
   'On Hold': 'bg-red-500',
 };
 
+// Map internal status to display text
+const getStatusDisplayText = (status: ShipmentStatus): string => {
+  if (status === 'Processing') {
+    return 'Shipment Received';
+  }
+  return status;
+};
+
 type TrackingTimelineProps = {
   history: ShipmentHistory[];
   currentStatus: ShipmentStatus;
@@ -76,7 +84,7 @@ export function TrackingTimeline({ history, currentStatus }: TrackingTimelinePro
                   'font-semibold text-lg',
                   isCurrent ? 'text-primary' : isCompleted ? 'text-green-600' : 'text-muted-foreground'
                 )}>
-                  {event.status}
+                  {getStatusDisplayText(event.status)}
                 </p>
                 {isCurrent && (
                   <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-primary/10 text-primary">

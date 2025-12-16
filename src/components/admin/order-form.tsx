@@ -13,6 +13,7 @@ import { CalendarIcon, Save, X, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { apiRequest } from '@/lib/api';
+import { toast } from '@/hooks/use-toast';
 
 interface OrderFormProps {
   order?: any;
@@ -36,7 +37,7 @@ export function OrderForm({ order, onSave, onCancel }: OrderFormProps) {
     // Order fields
     customerId: order?.customerId?._id || order?.customerId?.id || order?.customerId || '',
     branchId: order?.branchId || order?.branchId?._id || order?.branchId?.id || '',
-    items: order?.items || [{ description: '', quantity: 1 }],
+    items: order?.items || [{ description: '', quantity: '' }],
     totalAmount: order?.totalAmount || 0,
     notes: order?.notes || '',
     departureDate: order?.departureDate ? new Date(order.departureDate) : undefined,
@@ -114,7 +115,13 @@ export function OrderForm({ order, onSave, onCancel }: OrderFormProps) {
   const handleItemChange = (index: number, field: string, value: any) => {
     setFormData(prevFormData => {
       const newItems = [...prevFormData.items];
-      newItems[index] = { ...newItems[index], [field]: value };
+      // For quantity field, allow empty string but convert to number when valid
+      if (field === 'quantity') {
+        const numValue = value === '' ? '' : (parseInt(value) || '');
+        newItems[index] = { ...newItems[index], [field]: numValue };
+      } else {
+        newItems[index] = { ...newItems[index], [field]: value };
+      }
       return {
         ...prevFormData,
         items: newItems,
@@ -125,7 +132,7 @@ export function OrderForm({ order, onSave, onCancel }: OrderFormProps) {
   const addItem = () => {
     setFormData(prevFormData => ({
       ...prevFormData,
-      items: [...prevFormData.items, { description: '', quantity: 1 }]
+      items: [...prevFormData.items, { description: '', quantity: '' }]
     }));
   };
 
@@ -179,6 +186,21 @@ export function OrderForm({ order, onSave, onCancel }: OrderFormProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validate items - check for empty or invalid quantities
+    const invalidItems = formData.items.filter((item: any, index: number) => {
+      const quantity = item.quantity;
+      return !quantity || quantity === '' || quantity === 0 || isNaN(quantity) || quantity < 1;
+    });
+    
+    if (invalidItems.length > 0) {
+      toast({
+        title: "Validation Error",
+        description: "At least 1 quantity is required for all items. Please ensure all items have a quantity of 1 or more.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     // Prepare customer data and order data
     const customerData = {
       firstName: formData.customerFirstName,
@@ -190,12 +212,16 @@ export function OrderForm({ order, onSave, onCancel }: OrderFormProps) {
       country: formData.customerCountry,
     };
     
-    // Convert empty branchId to null
+    // Convert empty branchId to null and ensure quantities are numbers
     const submitData = {
       ...formData,
       customerData, // Include customer data for processing
       branchId: formData.branchId && formData.branchId !== 'none' ? formData.branchId : null,
       departureDate: formData.departureDate?.toISOString(),
+      items: formData.items.map((item: any) => ({
+        ...item,
+        quantity: typeof item.quantity === 'string' ? parseInt(item.quantity) || 1 : (item.quantity || 1)
+      }))
     };
     
     onSave(submitData);
@@ -464,35 +490,49 @@ export function OrderForm({ order, onSave, onCancel }: OrderFormProps) {
             </div>
             <div className="space-y-3">
               {formData.items.map((item: any, index: number) => (
-                <div key={index} className="grid grid-cols-12 gap-2 items-end">
-                  <div className="col-span-8">
-                    <Input
-                      placeholder="Item description"
-                      value={item.description || ''}
-                      onChange={(e) => handleItemChange(index, 'description', e.target.value)}
-                      required
-                    />
+                <div key={index} className="space-y-2">
+                  <div className="grid grid-cols-12 gap-2 items-start">
+                    <div className="col-span-8">
+                      <Input
+                        placeholder="Item description"
+                        value={item.description || ''}
+                        onChange={(e) => handleItemChange(index, 'description', e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="col-span-3">
+                      <Input
+                        type="number"
+                        placeholder="Quantity (min: 1)"
+                        value={item.quantity === undefined || item.quantity === null || item.quantity === '' ? '' : item.quantity}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          // Allow empty string, but validate on submit
+                          if (value === '') {
+                            handleItemChange(index, 'quantity', '');
+                          } else {
+                            const numValue = parseInt(value);
+                            handleItemChange(index, 'quantity', isNaN(numValue) ? '' : numValue);
+                          }
+                        }}
+                        min="1"
+                        required
+                      />
+                    </div>
+                    <div className="col-span-1">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeItem(index)}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
-                  <div className="col-span-3">
-                    <Input
-                      type="number"
-                      placeholder="Quantity"
-                      value={item.quantity || 1}
-                      onChange={(e) => handleItemChange(index, 'quantity', parseInt(e.target.value) || 1)}
-                      min="1"
-                      required
-                    />
-                  </div>
-                  <div className="col-span-1">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => removeItem(index)}
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </div>
+                  {(item.quantity === '' || item.quantity === 0 || (item.quantity !== undefined && item.quantity !== null && item.quantity < 1)) && (
+                    <p className="text-xs text-red-500 text-center col-span-12">At least 1 is required</p>
+                  )}
                 </div>
               ))}
             </div>

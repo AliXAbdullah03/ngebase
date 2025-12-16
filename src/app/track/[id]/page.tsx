@@ -9,7 +9,7 @@ import { TrackingTimeline } from '@/components/tracking-timeline';
 import type { ShipmentHistory, ShipmentStatus } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, ArrowLeft, Calendar, MapPin, Package, User, FileText, Weight, Truck, CheckCircle2, Clock, Download, Share2, Loader2 } from 'lucide-react';
+import { AlertCircle, ArrowLeft, Calendar, MapPin, Package, User, FileText, Weight, Truck, CheckCircle2, Clock, Download, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { apiRequest, getApiUrl } from '@/lib/api';
@@ -160,8 +160,8 @@ export default function TrackShipmentPage() {
   const getStatusLabel = (status: string) => {
     const s = status.toLowerCase();
     const statusMap: Record<string, string> = {
-      'pending': 'Pending',
-      'processing': 'Processing',
+      'pending': 'Shipment Received',
+      'processing': 'Shipment Received',
       'confirmed': 'Confirmed',
       'in_transit': 'In Transit',
       'in transit': 'In Transit',
@@ -292,6 +292,229 @@ export default function TrackShipmentPage() {
     return acc + (isNaN(weight) ? 0 : weight);
   }, 0);
 
+  // PDF Download Handler
+  const handleDownloadPDF = async () => {
+    try {
+      // Dynamically import jsPDF
+      const { jsPDF } = await import('jspdf');
+      const doc = new jsPDF();
+      
+      // Set up PDF content
+      let yPos = 20;
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const margin = 20;
+      const maxWidth = pageWidth - (margin * 2);
+      
+      // Company Header
+      doc.setFontSize(20);
+      doc.setTextColor(139, 92, 246); // Violet color
+      doc.text('NEXT GLOBAL EXPRESS', margin, yPos);
+      yPos += 10;
+      
+      doc.setFontSize(14);
+      doc.setTextColor(0, 0, 0);
+      doc.text('Tracking Information', margin, yPos);
+      yPos += 15;
+      
+      // Tracking Number
+      doc.setFontSize(12);
+      doc.setFont(undefined, 'bold');
+      doc.text(`${isOrder ? 'Order Number' : 'Tracking Number'}:`, margin, yPos);
+      doc.setFont(undefined, 'normal');
+      doc.text(trackingNumber, margin + 60, yPos);
+      yPos += 10;
+      
+      // Status
+      doc.setFont(undefined, 'bold');
+      doc.text('Status:', margin, yPos);
+      doc.setFont(undefined, 'normal');
+      doc.text(currentStatusLabel, margin + 30, yPos);
+      yPos += 10;
+      
+      // Customer Information
+      doc.setFont(undefined, 'bold');
+      doc.text('Customer Information:', margin, yPos);
+      yPos += 8;
+      doc.setFont(undefined, 'normal');
+      doc.text(`Name: ${customerName}`, margin, yPos);
+      yPos += 7;
+      if (customer?.email) {
+        doc.text(`Email: ${customer.email}`, margin, yPos);
+        yPos += 7;
+      }
+      if (customer?.phone) {
+        doc.text(`Phone: ${customer.phone}`, margin, yPos);
+        yPos += 7;
+      }
+      if (customer?.address) {
+        const addressLines = doc.splitTextToSize(`Address: ${customer.address}`, maxWidth - margin);
+        doc.text(addressLines, margin, yPos);
+        yPos += addressLines.length * 7;
+      }
+      yPos += 5;
+      
+      // Receiver Information
+      if (receiver && (receiver.firstName || receiver.name)) {
+        doc.setFont(undefined, 'bold');
+        doc.text('Receiver Information:', margin, yPos);
+        yPos += 8;
+        doc.setFont(undefined, 'normal');
+        const receiverName = receiver.firstName && receiver.lastName 
+          ? `${receiver.firstName} ${receiver.lastName}`
+          : receiver.name || receiver.email || 'N/A';
+        doc.text(`Name: ${receiverName}`, margin, yPos);
+        yPos += 7;
+        if (receiver.address) {
+          const receiverAddressLines = doc.splitTextToSize(`Address: ${receiver.address}`, maxWidth - margin);
+          doc.text(receiverAddressLines, margin, yPos);
+          yPos += receiverAddressLines.length * 7;
+        }
+        yPos += 5;
+      }
+      
+      // Dates
+      if (order?.departureDate || shipment?.departureDate) {
+        doc.setFont(undefined, 'bold');
+        doc.text('Departure Date:', margin, yPos);
+        doc.setFont(undefined, 'normal');
+        doc.text(
+          new Date(order?.departureDate || shipment?.departureDate).toLocaleDateString('en-US', { 
+            month: 'long', 
+            day: 'numeric', 
+            year: 'numeric' 
+          }),
+          margin + 50,
+          yPos
+        );
+        yPos += 10;
+      }
+      
+      if (order?.createdAt || shipment?.createdAt) {
+        doc.setFont(undefined, 'bold');
+        doc.text('Order Date:', margin, yPos);
+        doc.setFont(undefined, 'normal');
+        doc.text(
+          new Date(order?.createdAt || shipment?.createdAt).toLocaleDateString('en-US', { 
+            month: 'long', 
+            day: 'numeric', 
+            year: 'numeric' 
+          }),
+          margin + 50,
+          yPos
+        );
+        yPos += 10;
+      }
+      
+      // Items/Parcels
+      if (items.length > 0) {
+        yPos += 5;
+        doc.setFont(undefined, 'bold');
+        doc.text(`${isOrder ? 'Order Items' : 'Cargo Details'}:`, margin, yPos);
+        yPos += 8;
+        doc.setFont(undefined, 'normal');
+        
+        items.forEach((item: any, index: number) => {
+          if (yPos > 250) {
+            doc.addPage();
+            yPos = 20;
+          }
+          doc.setFont(undefined, 'bold');
+          doc.text(`${isOrder ? 'Item' : 'Parcel'} ${index + 1}:`, margin, yPos);
+          yPos += 7;
+          doc.setFont(undefined, 'normal');
+          if (item.description || item.items) {
+            const descLines = doc.splitTextToSize(`Description: ${item.description || item.items}`, maxWidth - margin);
+            doc.text(descLines, margin, yPos);
+            yPos += descLines.length * 7;
+          }
+          if (item.quantity || item.weight) {
+            doc.text(`${item.quantity ? 'Quantity' : 'Weight'}: ${item.quantity || item.weight}`, margin, yPos);
+            yPos += 7;
+          }
+          yPos += 5;
+        });
+      }
+      
+      // Tracking History
+      if (history.length > 0) {
+        yPos += 5;
+        if (yPos > 200) {
+          doc.addPage();
+          yPos = 20;
+        }
+        doc.setFont(undefined, 'bold');
+        doc.text('Tracking History:', margin, yPos);
+        yPos += 8;
+        doc.setFont(undefined, 'normal');
+        
+        history.forEach((event, index) => {
+          if (yPos > 250) {
+            doc.addPage();
+            yPos = 20;
+          }
+          const statusText = event.status === 'Processing' ? 'Shipment Received' : event.status;
+          doc.setFont(undefined, 'bold');
+          doc.text(`${index + 1}. ${statusText}`, margin, yPos);
+          yPos += 7;
+          doc.setFont(undefined, 'normal');
+          doc.text(`Date: ${new Date(event.date).toLocaleString('en-US', { 
+            dateStyle: 'medium', 
+            timeStyle: 'short' 
+          })}`, margin + 5, yPos);
+          yPos += 7;
+          if (event.location && event.location !== 'N/A') {
+            doc.text(`Location: ${event.location}`, margin + 5, yPos);
+            yPos += 7;
+          }
+          if (event.notes) {
+            const notesLines = doc.splitTextToSize(`Notes: ${event.notes}`, maxWidth - margin - 5);
+            doc.text(notesLines, margin + 5, yPos);
+            yPos += notesLines.length * 7;
+          }
+          yPos += 5;
+        });
+      }
+      
+      // Footer
+      const pageCount = doc.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(10);
+        doc.setTextColor(128, 128, 128);
+        doc.text(
+          `Page ${i} of ${pageCount}`,
+          pageWidth / 2,
+          doc.internal.pageSize.getHeight() - 10,
+          { align: 'center' }
+        );
+        doc.text(
+          `Generated on ${new Date().toLocaleDateString('en-US')}`,
+          pageWidth / 2,
+          doc.internal.pageSize.getHeight() - 5,
+          { align: 'center' }
+        );
+      }
+      
+      // Save the PDF
+      doc.save(`Tracking-${trackingNumber}-${new Date().toISOString().split('T')[0]}.pdf`);
+      
+      toast({
+        title: "Success",
+        description: "PDF downloaded successfully!",
+        variant: "default",
+      });
+    } catch (error: any) {
+      console.error('Error generating PDF:', error);
+      toast({
+        title: "Error",
+        description: error.message?.includes('jspdf') 
+          ? "PDF library not found. Please install jspdf: npm install jspdf"
+          : "Failed to generate PDF. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="flex min-h-screen flex-col">
       <EnhancedHeader />
@@ -317,31 +540,28 @@ export default function TrackShipmentPage() {
             <div className="max-w-6xl mx-auto">
               <Card className="border-2 border-violet-300/30 shadow-2xl bg-white/95 backdrop-blur-sm">
                 <CardHeader className="pb-4">
-                  <div className="flex flex-col md:flex-row justify-between md:items-start gap-4">
-                    <div className="space-y-2">
-                      <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                  <div className="flex flex-col md:flex-row justify-between md:items-start gap-3 sm:gap-4">
+                    <div className="space-y-1 sm:space-y-2 min-w-0 flex-1">
+                      <p className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wide">
                         {isOrder ? 'Order Number' : 'Tracking Number'}
                       </p>
-                      <h1 className="text-3xl md:text-4xl font-bold text-violet-600 tracking-wider font-mono">
+                      <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-violet-600 tracking-wider font-mono break-all">
                         {trackingNumber}
                       </h1>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                       <Badge 
                         variant={getStatusVariant(status)} 
-                        className="text-base font-semibold px-5 py-2.5 flex items-center gap-2"
+                        className="text-xs sm:text-sm md:text-base font-semibold px-3 sm:px-4 md:px-5 py-1.5 sm:py-2 md:py-2.5 flex items-center gap-2"
                       >
                         <div className={`w-2 h-2 rounded-full ${getStatusColor(status)} animate-pulse`}></div>
-                        {currentStatusLabel}
+                        <span className="whitespace-nowrap">{currentStatusLabel}</span>
                       </Badge>
-                      <Button variant="outline" size="icon" className="rounded-full">
-                        <Share2 className="h-4 w-4" />
-                      </Button>
                     </div>
                   </div>
                 </CardHeader>
                 <Separator />
-                <CardContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 pt-6">
+                <CardContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6 pt-4 sm:pt-6">
                   <div className="flex items-start gap-3 p-4 rounded-lg bg-gradient-to-r from-violet-50 to-purple-50 hover:bg-gradient-to-br from-violet-100 to-purple-100 transition-colors group">
                     <div className="p-2 rounded-lg bg-gradient-to-br from-violet-100 to-purple-100 group-hover:bg-primary/20 transition-colors">
                       <User className="w-5 h-5 text-violet-600" />
@@ -405,9 +625,9 @@ export default function TrackShipmentPage() {
         {/* Main Content */}
         <section className="py-12 bg-white">
           <div className="container mx-auto px-4 md:px-6">
-            <div className="max-w-6xl mx-auto grid lg:grid-cols-3 gap-8">
+            <div className="max-w-6xl mx-auto grid lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
               {/* Left Column - Timeline */}
-              <div className="lg:col-span-2 space-y-6">
+              <div className="lg:col-span-2 space-y-4 sm:space-y-6">
                 <Card className="border-2 border-violet-300/30 shadow-xl">
                   <CardHeader>
                     <div className="flex items-center justify-between">
@@ -488,9 +708,9 @@ export default function TrackShipmentPage() {
               </div>
 
               {/* Right Column - Info Cards */}
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 {/* Quick Info */}
-                <Card className="border-2 border-violet-300/30 shadow-xl sticky top-24">
+                <Card className="border-2 border-violet-300/30 shadow-xl lg:sticky lg:top-24">
                   <CardHeader>
                     <CardTitle className="text-lg">Quick Information</CardTitle>
                   </CardHeader>
@@ -530,13 +750,14 @@ export default function TrackShipmentPage() {
                       </>
                     )}
                     <div className="flex gap-2 pt-2">
-                      <Button variant="outline" size="sm" className="flex-1">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={handleDownloadPDF}
+                      >
                         <Download className="w-4 h-4 mr-2" />
-                        Download
-                      </Button>
-                      <Button variant="outline" size="sm" className="flex-1">
-                        <Share2 className="w-4 h-4 mr-2" />
-                        Share
+                        Download PDF
                       </Button>
                     </div>
                   </CardContent>

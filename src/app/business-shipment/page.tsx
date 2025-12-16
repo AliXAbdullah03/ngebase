@@ -107,21 +107,21 @@ export default function BusinessShipmentPage() {
                   <Building2 className="w-16 h-16 text-primary" />
                 </div>
               </div>
-              <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent px-4">
                 Business Shipment Solutions
               </h1>
-              <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+              <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
                 Streamline your logistics operations with our comprehensive business shipping solutions. 
                 Designed for companies that ship regularly and need reliable, cost-effective solutions.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-lg px-8">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
+                <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-base sm:text-lg px-6 sm:px-8 w-full sm:w-auto">
                   <Link href="/admin">
                     Get Started
-                    <ArrowRight className="w-5 h-5 ml-2" />
+                    <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
                   </Link>
                 </Button>
-                <Button asChild variant="outline" size="lg" className="text-lg px-8">
+                <Button asChild variant="outline" size="lg" className="text-base sm:text-lg px-6 sm:px-8 w-full sm:w-auto">
                   <Link href="#contact">
                     Contact Sales
                   </Link>
@@ -144,17 +144,17 @@ export default function BusinessShipmentPage() {
               </p>
             </div>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8 sm:mb-12">
               {benefits.map((benefit, index) => {
                 const Icon = benefit.icon;
                 return (
                   <Card key={index} className="border-2 border-primary/10 hover:border-primary/30 transition-all duration-300 hover:shadow-xl hover:-translate-y-2">
-                    <CardContent className="p-6">
-                      <div className={`p-4 rounded-lg ${benefit.bgColor} mb-4 inline-block`}>
-                        <Icon className={`w-8 h-8 ${benefit.color}`} />
+                    <CardContent className="p-4 sm:p-6">
+                      <div className={`p-3 sm:p-4 rounded-lg ${benefit.bgColor} mb-3 sm:mb-4 inline-block`}>
+                        <Icon className={`w-6 h-6 sm:w-8 sm:h-8 ${benefit.color}`} />
                       </div>
-                      <h3 className="text-xl font-bold mb-2">{benefit.title}</h3>
-                      <p className="text-muted-foreground text-sm">{benefit.description}</p>
+                      <h3 className="text-lg sm:text-xl font-bold mb-2">{benefit.title}</h3>
+                      <p className="text-muted-foreground text-xs sm:text-sm">{benefit.description}</p>
                     </CardContent>
                   </Card>
                 );
@@ -260,16 +260,16 @@ export default function BusinessShipmentPage() {
               </p>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8 max-w-5xl mx-auto">
               <Card className="border-2 border-primary/10">
-                <CardHeader className="text-center pb-4">
-                  <h3 className="text-2xl font-bold mb-2">Starter</h3>
-                  <p className="text-muted-foreground">For small businesses</p>
+                <CardHeader className="text-center pb-3 sm:pb-4">
+                  <h3 className="text-xl sm:text-2xl font-bold mb-2">Starter</h3>
+                  <p className="text-sm sm:text-base text-muted-foreground">For small businesses</p>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-3 sm:space-y-4">
                   <div className="text-center">
-                    <span className="text-4xl font-bold">10%</span>
-                    <p className="text-muted-foreground">Volume Discount</p>
+                    <span className="text-3xl sm:text-4xl font-bold">10%</span>
+                    <p className="text-sm sm:text-base text-muted-foreground">Volume Discount</p>
                   </div>
                   <ul className="space-y-2">
                     <li className="flex items-center gap-2">
@@ -291,18 +291,18 @@ export default function BusinessShipmentPage() {
                 </CardContent>
               </Card>
 
-              <Card className="border-2 border-primary shadow-xl scale-105">
-                <CardHeader className="text-center pb-4 bg-primary/5">
-                  <div className="inline-block px-3 py-1 bg-primary text-white text-xs font-bold rounded-full mb-2">
+              <Card className="border-2 border-primary shadow-xl md:scale-105">
+                <CardHeader className="text-center pb-3 sm:pb-4 bg-primary/5">
+                  <div className="inline-block px-2 sm:px-3 py-1 bg-primary text-white text-xs font-bold rounded-full mb-2">
                     MOST POPULAR
                   </div>
-                  <h3 className="text-2xl font-bold mb-2">Professional</h3>
-                  <p className="text-muted-foreground">For growing businesses</p>
+                  <h3 className="text-xl sm:text-2xl font-bold mb-2">Professional</h3>
+                  <p className="text-sm sm:text-base text-muted-foreground">For growing businesses</p>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-3 sm:space-y-4">
                   <div className="text-center">
-                    <span className="text-4xl font-bold">20%</span>
-                    <p className="text-muted-foreground">Volume Discount</p>
+                    <span className="text-3xl sm:text-4xl font-bold">20%</span>
+                    <p className="text-sm sm:text-base text-muted-foreground">Volume Discount</p>
                   </div>
                   <ul className="space-y-2">
                     <li className="flex items-center gap-2">

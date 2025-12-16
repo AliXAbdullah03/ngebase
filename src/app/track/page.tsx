@@ -117,32 +117,32 @@ export default function TrackPage() {
               </div>
 
               {/* Enhanced Tracking Search */}
-              <div className="mt-10 space-y-3">
+              <div className="mt-6 sm:mt-10 space-y-2 sm:space-y-3">
                 <div className="relative group">
                   <div className="absolute -inset-0.5 bg-gradient-to-r from-primary via-primary/60 to-primary rounded-xl opacity-20 group-hover:opacity-30 blur transition-opacity duration-300"></div>
-                  <div className="relative flex items-center gap-0 border-2 border-violet-500/30 rounded-xl bg-white/95 backdrop-blur-md shadow-xl hover:shadow-2xl hover:border-violet-500/50 transition-all duration-300 max-w-3xl mx-auto overflow-hidden">
-                    <div className="flex items-center px-4 py-3 bg-violet-400/20 border-r border-violet-500/10">
-                      <Search className="h-5 w-5 text-violet-600 flex-shrink-0" />
+                  <div className="relative flex flex-col sm:flex-row items-stretch sm:items-center gap-0 border-2 border-violet-500/30 rounded-xl bg-white/95 backdrop-blur-md shadow-xl hover:shadow-2xl hover:border-violet-500/50 transition-all duration-300 max-w-3xl mx-auto overflow-hidden">
+                    <div className="flex items-center px-3 sm:px-4 py-2 sm:py-3 bg-violet-400/20 border-b sm:border-b-0 sm:border-r border-violet-500/10">
+                      <Search className="h-4 w-4 sm:h-5 sm:w-5 text-violet-600 flex-shrink-0" />
                     </div>
-                    <form onSubmit={handleSearch} className="flex flex-grow items-center">
+                    <form onSubmit={handleSearch} className="flex flex-grow items-center min-w-0">
                       <input
                         type="text"
                         value={trackingId}
                         onChange={(e) => setTrackingId(e.target.value)}
-                        placeholder="Enter tracking number or order ID (e.g., NGE123456789 or ORD-1001)"
-                        className="flex-grow border-0 focus:outline-none focus:ring-0 bg-transparent h-14 text-base placeholder:text-muted-foreground/60 px-4"
+                        placeholder="Enter tracking number or order ID"
+                        className="flex-grow border-0 focus:outline-none focus:ring-0 bg-transparent h-12 sm:h-14 text-sm sm:text-base placeholder:text-muted-foreground/60 px-3 sm:px-4 min-w-0"
                         aria-label="Tracking ID"
                         disabled={searching}
                       />
                       <Button 
                         type="submit" 
-                        className="h-14 px-8 rounded-r-xl bg-primary hover:bg-primary/90 text-violet-600-foreground font-semibold shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2 group"
+                        className="h-12 sm:h-14 px-4 sm:px-6 md:px-8 rounded-r-xl bg-primary hover:bg-primary/90 text-violet-600-foreground font-semibold shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2 group text-sm sm:text-base"
                         disabled={!trackingId.trim() || searching}
                       >
                         {searching ? (
                           <>
                             <Loader2 className="h-4 w-4 animate-spin" />
-                            <span>Searching...</span>
+                            <span className="hidden sm:inline">Searching...</span>
                           </>
                         ) : (
                           <>
@@ -154,11 +154,11 @@ export default function TrackPage() {
                     </form>
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground flex items-center justify-center gap-1">
+                <p className="text-xs text-muted-foreground flex flex-wrap items-center justify-center gap-1 px-4">
                   <span>Examples:</span>
-                  <code className="px-2 py-0.5 bg-gradient-to-br from-violet-100 to-purple-100 rounded text-violet-600 font-mono text-xs">NGE123456789</code>
+                  <code className="px-2 py-0.5 bg-gradient-to-br from-violet-100 to-purple-100 rounded text-violet-600 font-mono text-xs break-all">NGE123456789</code>
                   <span>or</span>
-                  <code className="px-2 py-0.5 bg-gradient-to-br from-violet-100 to-purple-100 rounded text-violet-600 font-mono text-xs">ORD-1001</code>
+                  <code className="px-2 py-0.5 bg-gradient-to-br from-violet-100 to-purple-100 rounded text-violet-600 font-mono text-xs break-all">ORD-1001</code>
                 </p>
               </div>
             </div>

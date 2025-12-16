@@ -200,8 +200,8 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50">
-      <div className="w-full max-w-md space-y-8 rounded-lg bg-white p-8 shadow-md">
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-8">
+      <div className="w-full max-w-md space-y-6 sm:space-y-8 rounded-lg bg-white p-4 sm:p-6 md:p-8 shadow-md">
         <div>
           <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
             Admin Login
@@ -212,12 +212,12 @@ export default function LoginPage() {
         </div>
 
         {/* Connection Test Button */}
-        <div className="mb-4">
+        <div className="mb-3 sm:mb-4">
           <button
             type="button"
             onClick={testConnection}
             disabled={testingConnection || loading}
-            className="w-full flex items-center justify-center gap-2 rounded-md border border-violet-300 bg-violet-50 px-4 py-2 text-sm font-medium text-violet-700 hover:bg-violet-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="w-full flex items-center justify-center gap-2 rounded-md border border-violet-300 bg-violet-50 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-violet-700 hover:bg-violet-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {testingConnection ? (
               <>
@@ -237,15 +237,15 @@ export default function LoginPage() {
         </div>
 
         {error && (
-          <div className="rounded-md bg-red-50 p-4">
-            <div className="flex">
+          <div className="rounded-md bg-red-50 p-3 sm:p-4">
+            <div className="flex gap-2 sm:gap-3">
               <div className="flex-shrink-0">
-                <AlertCircle className="h-5 w-5 text-red-400" />
+                <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-red-400 mt-0.5" />
               </div>
-              <div className="ml-3 flex-1">
-                <p className="text-sm font-medium text-red-800 whitespace-pre-line">{error}</p>
-                <p className="text-xs text-red-600 mt-2">
-                  API URL: <code className="bg-red-100 px-1 rounded">{getApiUrl()}/auth/login</code>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs sm:text-sm font-medium text-red-800 whitespace-pre-line break-words">{error}</p>
+                <p className="text-xs text-red-600 mt-2 break-all">
+                  API URL: <code className="bg-red-100 px-1 rounded text-xs">{getApiUrl()}/auth/login</code>
                 </p>
               </div>
             </div>
